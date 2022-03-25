@@ -7,7 +7,6 @@ class HelpDlg : public wxDialog
 {
 public:
     HelpDlg(wxWindow *parent, wxWindowID id);
-    ~HelpDlg() {};
 };
 
 #endif

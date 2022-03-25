@@ -1,12 +1,15 @@
 #include "./App.h"
-#include "./GameFrame.h"
+#include "./MainFrame.h"
 
 wxIMPLEMENT_APP(MyApp);
 
 bool MyApp::OnInit()
 {
-    GameFrame *frame = new GameFrame();
+    wxImage::AddHandler(new wxPNGHandler());
+
+    MainFrame *frame = new MainFrame();
     frame->Show(true);
     SetTopWindow(frame);
+    
     return true;
 }

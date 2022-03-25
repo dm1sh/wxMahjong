@@ -7,7 +7,6 @@ class AboutDlg : public wxDialog
 {
 public:
     AboutDlg(wxWindow *parent, wxWindowID id);
-    ~AboutDlg() {};
 };
 
 #endif

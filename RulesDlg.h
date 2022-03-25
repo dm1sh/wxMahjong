@@ -7,7 +7,6 @@ class RulesDlg : public wxDialog
 {
 public:
     RulesDlg(wxWindow *parent, wxWindowID id);
-    ~RulesDlg() {};
 };
 
 #endif
