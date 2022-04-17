@@ -1,12 +1,12 @@
 #ifndef GRAPHICS_H
 #define GRAPHICS_H
 
-#include "./wxw.h"
+#include "wxw.h"
 
 #include <wx/stopwatch.h>
 
-#include "./Drawer.h"
-#include "./Controller.h"
+#include "Drawer.h"
+#include "Controller.h"
 
 class GamePanel : public wxPanel {
 public:
@@ -19,8 +19,10 @@ private:
     Controller controller;
 
     void OnPaint(wxPaintEvent& _);
-
-    wxStaticText* timerText;
+    void OnTimer(wxTimerEvent& _);
+    void OnClick(wxMouseEvent& _);
+    
+    wxStatusBar* sb;
     wxTimer* timer;
 };
 
