@@ -1,23 +1,31 @@
-#include "./MainFrame.h"
+#include "MainFrame.h"
 
-#include "./HelpDlg.h"
-#include "./RulesDlg.h"
-#include "./AboutDlg.h"
+#include "HelpDlg.h"
+#include "RulesDlg.h"
+#include "AboutDlg.h"
 
 MainFrame::MainFrame()
-    : wxFrame(nullptr, wxID_ANY, _("Маджонг (пасьянс)"))
+    : wxFrame(nullptr, wxID_ANY, _("Маджонг (пасьянс)")),
+    dataDirPath(wxStandardPaths::Get().GetUserDataDir())
 {
     InitMenu();
     BindMenu();
+
+    CreateStatusBar();
 
     panel = new GamePanel(this);
     panel->SetFocus();
     panel->Start();
 }
 
+MainFrame::~MainFrame() {
+    delete panel;
+}
+
 void MainFrame::InitMenu() {
     wxMenu *menuGame = new wxMenu;
     menuGame->Append(IDM_New_Game, _("Начать сначала"));
+    menuGame->Append(IDM_Open, _("Открыть карту"));
     menuGame->AppendSeparator();
     menuGame->Append(IDM_Exit, _("Выход"));
 
@@ -38,6 +46,8 @@ void MainFrame::BindMenu() {
         Close();
     }, IDM_Exit);
 
+    Bind(wxEVT_MENU, &MainFrame::OnOpen, this, IDM_Open);
+
     Bind(wxEVT_MENU, [this](wxCommandEvent& _) -> void {
         (new HelpDlg(this, -1))->Show();
     }, IDM_Help);
@@ -53,4 +63,13 @@ void MainFrame::BindMenu() {
     Bind(wxEVT_MENU, [this](wxCommandEvent& _) -> void {
         panel->Start();
     }, IDM_New_Game);
+}
+
+void MainFrame::OnOpen(wxCommandEvent& _) {
+    wxFileDialog openFileDlg(this, "Открыть карту", dataDirPath + wxFileName::GetPathSeparator() + _("layouts"), "Turtle.smlf", "Файлы Mahjong карт (*.smlf)|*.smlf", wxFD_OPEN | wxFD_FILE_MUST_EXIST);
+
+    if (openFileDlg.ShowModal() == wxID_CANCEL)
+        return;
+
+    GetStatusBar()->PushStatusText(openFileDlg.GetPath());
 }
