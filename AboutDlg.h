@@ -1,7 +1,7 @@
 #ifndef ABOUTDLG_H
 #define ABOUTDLG_H
 
-#include "./wxw.h"
+#include "wxw.h"
 
 class AboutDlg : public wxDialog
 {

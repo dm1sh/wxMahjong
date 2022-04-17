@@ -1,7 +1,7 @@
 #ifndef APP_H_
 #define APP_H_
 
-#include "./wxw.h"
+#include "wxw.h"
 
 class MyApp : public wxApp
 {

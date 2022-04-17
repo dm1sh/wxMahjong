@@ -1,7 +1,7 @@
 #ifndef HELPDLG_H
 #define HELPDLG_H
 
-#include "./wxw.h"
+#include "wxw.h"
 
 class HelpDlg : public wxDialog
 {

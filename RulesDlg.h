@@ -1,7 +1,7 @@
 #ifndef RULESDLG_H
 #define RULESDLG_H
 
-#include "./wxw.h"
+#include "wxw.h"
 
 class RulesDlg : public wxDialog
 {
