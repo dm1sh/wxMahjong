@@ -13,17 +13,17 @@ class MainFrame : public wxFrame
 {
 public:
     MainFrame();
-    ~MainFrame();
 
 private:
-    void InitMenu();
-    void BindMenu();
+    void initMenu();
+    void bindMenu();
 
-    void OnOpen(wxCommandEvent& _);
+    void openLayout();
 
     GamePanel *panel;
 
     const wxString dataDirPath;
+    wxString layoutPath;
 };
 
 enum

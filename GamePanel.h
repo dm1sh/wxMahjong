@@ -12,7 +12,7 @@ class GamePanel : public wxPanel {
 public:
     GamePanel(wxFrame* parent);
 
-    void Start();
+    void Start(const wxString& path);
 
 private:
     Drawer drawer;
@@ -22,8 +22,8 @@ private:
     void OnTimer(wxTimerEvent& _);
     void OnClick(wxMouseEvent& _);
     
-    wxStatusBar* sb;
-    wxTimer* timer;
+    wxStatusBar* sb = nullptr;
+    wxTimer* timer = nullptr;
 };
 
 #endif

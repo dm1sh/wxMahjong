@@ -18,8 +18,9 @@ GamePanel::GamePanel(wxFrame* parent) : wxPanel(parent), controller(drawer), sb(
     Bind(wxEVT_LEFT_DOWN, &GamePanel::OnClick, this);
 }
 
-void GamePanel::Start() {
+void GamePanel::Start(const wxString& path) {
     controller.stopwatch = 0;
+    controller.loadLayout(path);
 
     timer->Start(1000, wxTIMER_CONTINUOUS);
     sb->SetStatusText(LTimeToStr(controller.stopwatch));
@@ -37,6 +38,14 @@ void GamePanel::OnTimer(wxTimerEvent& _) {
 }
 
 void GamePanel::OnClick(wxMouseEvent& _) {
-    wxPoint res = controller.toGrid(wxGetMousePosition());
-    sb->PushStatusText(itowxS(res.x) + _("x") + itowxS(res.y));
+    wxPoint res = controller.toGrid(ScreenToClient(wxGetMousePosition()));
+
+    if (res.x > -1) {
+        auto card = controller.getCardByPosition(res);
+        if (card != nullptr) {
+            controller.select(card);
+        }
+    }
+
+    Refresh();
 }
