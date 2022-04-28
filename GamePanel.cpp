@@ -24,6 +24,9 @@ void GamePanel::Start(const wxString& path) {
 
     timer->Start(1000, wxTIMER_CONTINUOUS);
     sb->SetStatusText(LTimeToStr(controller.stopwatch));
+
+
+    drawer.initScreen(drawer.tableSize, *controller.getTable());
 }
 
 void GamePanel::OnPaint(wxPaintEvent& _) {

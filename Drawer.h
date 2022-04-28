@@ -26,7 +26,7 @@ public:
 
 private:
     void drawScreen(wxDC& dc);
-    void drawTile(wxDC& dc, int8_t index, const wxPoint& position);
+    void drawTile(wxDC& dc, int8_t index, const wxPoint& position, uint8_t zIndex);
   
     wxImage tileImages[40];
 

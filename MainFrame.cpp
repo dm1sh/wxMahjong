@@ -64,6 +64,8 @@ void MainFrame::bindMenu() {
             openLayout();
         else
             panel->Start(layoutPath);
+            
+        Refresh();
     }, IDM_New_Game);
 }
 

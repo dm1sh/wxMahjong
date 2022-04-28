@@ -49,8 +49,8 @@ void Drawer::initScreen(const wxSize& tableSize, const TLVec& layout) {
                         k--;
 
                     if (k > -1)
-                        if (layout[i][j][k].first == layer) {
-                            drawTile(dc, layout[i][j][k].second, {tablePixelRect.x + tilePixelSize.x*i, tablePixelRect.y + tilePixelSize.y*j});
+                        if (layout[i][j][k].first == layer || layer == 0) {
+                            drawTile(dc, layout[i][j][k].second, {tablePixelRect.x + tilePixelSize.x*i, tablePixelRect.y + tilePixelSize.y*j}, layer);
                             cards_set++;
                         }
                     }
@@ -60,11 +60,18 @@ void Drawer::initScreen(const wxSize& tableSize, const TLVec& layout) {
     }
 }
 
-void Drawer::drawTile (wxDC& dc, int8_t index, const wxPoint& position) {
-    dc.DrawRoundedRectangle(position, tilePixelSize * 2, 10);
+void Drawer::drawTile(wxDC& dc, int8_t index, const wxPoint& position, uint8_t zIndex) {
+    wxBrush _bgColor = dc.GetBrush();
+    dc.SetBrush(wxColor(200, 200, 200));
+
+    dc.DrawRoundedRectangle(position.x + (tilePixelSize.GetWidth()/10 + 3) - (tilePixelSize.GetWidth()/10 + 3)*zIndex, position.y + (tilePixelSize.GetHeight()/10 + 3) - (tilePixelSize.GetHeight()/10 + 3)*zIndex, tilePixelSize.GetWidth() * 2, tilePixelSize.GetHeight() * 2, 10);
+
+    dc.SetBrush(_bgColor);
+
+    dc.DrawRoundedRectangle(position.x - (tilePixelSize.GetWidth()/10 + 3)*zIndex, position.y - (tilePixelSize.GetHeight()/10 + 3)*zIndex, tilePixelSize.GetWidth() * 2, tilePixelSize.GetHeight() * 2, 10);
 
     if (tileImages[index].GetWidth() != tilePixelSize.x * 2)
-        dc.DrawBitmap(tileImages[index].Scale(tilePixelSize.x * 2 - 20, tilePixelSize.y * 2 - 20), {position.x + 10, position.y + 10});
+        dc.DrawBitmap(tileImages[index].Scale(tilePixelSize.x * 2 - 20, tilePixelSize.y * 2 - 20), {position.x + 10 - (tilePixelSize.GetWidth()/10 + 3)*zIndex, position.y + 10 - (tilePixelSize.GetHeight()/10 + 3)*zIndex});
     else
-        dc.DrawBitmap(tileImages[index], position);
+        dc.DrawBitmap(tileImages[index], {position.x + 10 - (tilePixelSize.GetWidth()/10 + 3)*zIndex, position.y + 10 - (tilePixelSize.GetHeight()/10 + 3)*zIndex});
 }
