@@ -1,11 +1,16 @@
 #include "Drawer.h"
 
-#define TILE_IMAGES_N 37
-static const char* tileImageNames[] = { "Back", "Blank", "Chun", "Front", "Haku", "Hatsu", "Man1", "Man2", "Man3", "Man4", "Man5", "Man6", "Man7", "Man8", "Man9", "Nan", "Pei", "Pin1", "Pin2", "Pin3", "Pin4", "Pin5", "Pin6", "Pin7", "Pin8", "Pin9", "Shaa", "Sou1", "Sou2", "Sou3", "Sou4", "Sou5", "Sou6", "Sou7", "Sou8", "Sou9", "Ton" };
+static const char* tileImageNames[] = { "Pin1", "Pin2", "Pin3", "Pin4", "Pin5", "Pin6", "Pin7", "Pin8", "Pin9", "Sou1", "Sou2", "Sou3", "Sou4", "Sou5", "Sou6", "Sou7", "Sou8", "Sou9", "Man1", "Man2", "Man3", "Man4", "Man5", "Man6", "Man7", "Man8", "Man9", "Chun", "Haku", "Hatsu", "Nan", "Pei", "Shaa", "Ton", "Flower1", "Flower2", "Flower3", "Flower4", "Season1", "Season2", "Season3", "Season4" };
 
-Drawer::Drawer() {
-    for (int i = 0; i < 37; i++)
-        tileImages[i].LoadFile(_("./resources/tiles/") + _(tileImageNames[i]) + _(".png"), wxBITMAP_TYPE_PNG);
+/**
+ * TODO: fix not loading last two tiles icons
+ */
+
+Drawer::Drawer():  marked{-1, -1, -1} {
+    for (int i = 0; i < TILE_IMAGES_N; i++) {
+        if (!tileImages[i].LoadFile(_("./resources/tiles/") + _(tileImageNames[i]) + _(".png"), wxBITMAP_TYPE_PNG))
+            wxLogDebug(_("./resources/tiles/") + _(tileImageNames[i]) + _(".png ") + wxString::Format(wxT("%i"), i));
+    }
 }
 
 void Drawer::drawTable(wxDC& dc) {
@@ -28,33 +33,46 @@ void Drawer::setBG(const wxSize& tableSize) {
     isBgReady = true;
 }
 
-void Drawer::initScreen(const wxSize& tableSize, const TLVec& layout) {
+wxPoint Drawer::toGrid(const wxPoint& point) {
+    wxPoint out(-1, -1);
+
+    if (point.x >= tablePixelRect.x &&
+        point.x <= tablePixelRect.x + tablePixelRect.width &&
+        point.y >= tablePixelRect.y &&
+        point.y <= tablePixelRect.y + tablePixelRect.height)
+    {
+        out.x = (point.x - tablePixelRect.x) / tilePixelSize.x;
+        out.y = (point.y - tablePixelRect.y) / tilePixelSize.y;
+    }
+
+    return out;
+}
+
+wxPoint Drawer::fromGrid(int x, int y) {
+    return { tablePixelRect.x + x * tilePixelSize.x,
+             tablePixelRect.y + y * tilePixelSize.y };
+}
+
+wxPoint Drawer::fromGrid(const wxPoint& point) {
+    return fromGrid(point.x, point.y);
+}
+
+void Drawer::initScreen(const TLVec& layout) {
     if (isBgReady) {
         screenBitmap = copyBitmap(bgBitmap);
+
+        wxLogDebug(_("Reinit"));
 
         wxMemoryDC dc;
         dc.SelectObject(screenBitmap);
 
-        int cards_set = -1;
-        uint8_t layer = -1;
-
-        while (cards_set) {
-            layer++;
-            cards_set = 0;
-
-            for (int i = 0; i < layout.size(); i++)
-                for (int j = 0; j < layout[i].size(); j++) {
-                    int k = layout[i][j].size() - 1;
-                    while (k > -1 && layout[i][j][k].second == (uint8_t)-1)
-                        k--;
-
-                    if (k > -1)
-                        if (layout[i][j][k].first == layer || layer == 0) {
-                            drawTile(dc, layout[i][j][k].second, {tablePixelRect.x + tilePixelSize.x*i, tablePixelRect.y + tilePixelSize.y*j}, layer);
-                            cards_set++;
-                        }
-                    }
-        }
+        for (int z = 0; z < gridSize.z; z++)
+            for (int x = 0; x < gridSize.x; x++)
+                for (int y = 0; y < gridSize.y; y++) {
+                    CardT c = layout[z][x][y];
+                    if (c >= 0)
+                        drawTile(dc, c, fromGrid(x, y), z);
+                }
 
         isScreenReady = true;
     }
@@ -62,16 +80,29 @@ void Drawer::initScreen(const wxSize& tableSize, const TLVec& layout) {
 
 void Drawer::drawTile(wxDC& dc, int8_t index, const wxPoint& position, uint8_t zIndex) {
     wxBrush _bgColor = dc.GetBrush();
-    dc.SetBrush(wxColor(200, 200, 200));
+
+    wxBrush front = wxColor(255, 255, 255);
+    wxBrush back = wxColor(200, 200, 200);
+
+    if (position == fromGrid({marked.x, marked.y}) && marked.z == zIndex) {
+        front = wxColor(200, 255, 200);
+        back = wxColor(190, 220, 190);
+    }
+
+    dc.SetBrush(back);
 
     dc.DrawRoundedRectangle(position.x + (tilePixelSize.GetWidth()/10 + 3) - (tilePixelSize.GetWidth()/10 + 3)*zIndex, position.y + (tilePixelSize.GetHeight()/10 + 3) - (tilePixelSize.GetHeight()/10 + 3)*zIndex, tilePixelSize.GetWidth() * 2, tilePixelSize.GetHeight() * 2, 10);
 
-    dc.SetBrush(_bgColor);
+    dc.SetBrush(front);
 
     dc.DrawRoundedRectangle(position.x - (tilePixelSize.GetWidth()/10 + 3)*zIndex, position.y - (tilePixelSize.GetHeight()/10 + 3)*zIndex, tilePixelSize.GetWidth() * 2, tilePixelSize.GetHeight() * 2, 10);
 
-    if (tileImages[index].GetWidth() != tilePixelSize.x * 2)
-        dc.DrawBitmap(tileImages[index].Scale(tilePixelSize.x * 2 - 20, tilePixelSize.y * 2 - 20), {position.x + 10 - (tilePixelSize.GetWidth()/10 + 3)*zIndex, position.y + 10 - (tilePixelSize.GetHeight()/10 + 3)*zIndex});
-    else
-        dc.DrawBitmap(tileImages[index], {position.x + 10 - (tilePixelSize.GetWidth()/10 + 3)*zIndex, position.y + 10 - (tilePixelSize.GetHeight()/10 + 3)*zIndex});
+    dc.SetBrush(_bgColor);
+
+    if (tileImages[index].IsOk()) {
+        if (tileImages[index].GetWidth() != tilePixelSize.x * 2)
+            dc.DrawBitmap(tileImages[index].Scale(tilePixelSize.x * 2 - 20, tilePixelSize.y * 2 - 20), {position.x + 10 - (tilePixelSize.GetWidth()/10 + 3)*zIndex, position.y + 10 - (tilePixelSize.GetHeight()/10 + 3)*zIndex});
+        else
+            dc.DrawBitmap(tileImages[index], {position.x + 10 - (tilePixelSize.GetWidth()/10 + 3)*zIndex, position.y + 10 - (tilePixelSize.GetHeight()/10 + 3)*zIndex});
+    }
 }

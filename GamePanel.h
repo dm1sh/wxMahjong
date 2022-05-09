@@ -12,7 +12,7 @@ class GamePanel : public wxPanel {
 public:
     GamePanel(wxFrame* parent);
 
-    void Start(const wxString& path);
+    void Start(const wxString& path, bool solveable);
 
 private:
     Drawer drawer;

@@ -1,6 +1,9 @@
 #ifndef CONTROLLER_H
 #define CONTROLLER_H
 
+#include <array>
+#include <list>
+
 #include "wxw.h"
 
 #include "Drawer.h"
@@ -10,27 +13,41 @@ class Controller {
 public:
     Controller(Drawer& drawer);
 
-    int stopwatch = 0;
+    int stopwatch = -1;
 
     void resize(const wxSize& tableSize);
 
     void loadLayout(const wxString& path);
 
-    wxPoint toGrid(const wxPoint& point);
-    wxPoint fromGrid(const wxPoint& point);
+    bool available(const ThreePoint& point);
+    bool upFree(const ThreePoint& point);
+    bool sideFree(const ThreePoint& point);
 
-    void select(TLSquare* card);
+    void select(CardT* card);
 
-    TLVec* getTable();
+    TLVec& getTable();
 
-    TLSquare* getCardByPosition(const wxPoint& point);
+    void fillSolveableTable();
+    void fillRandom();
+
+    CardT* getCardByPosition(ThreePoint& point);
+
+    std::array<uint8_t, TILE_IMAGES_N>cardsCounter;
+
+    uint8_t remaining;
 private:
     Drawer& drawer;
     XmlLayout layout;
 
     TLVec table;
 
-    TLSquare* selected = nullptr;
+    CardT* selected = nullptr;
+
+    int emplace_rand(int id, std::list<ThreePoint> positions, int past_pos, std::list<ThreePoint>::iterator past_ptr);
+
+    int genRandId();
+
+    bool sameValues(CardT a, CardT b);
 };
 
 #endif

@@ -8,6 +8,8 @@
 #define TILE_HEIGHT 8
 #define TILE_WIDTH 6
 
+#define TILE_IMAGES_N 42
+
 class Drawer {
 public:
     Drawer();
@@ -18,11 +20,17 @@ public:
 
     wxSize tilePixelSize; // 600x800
     wxSize resolution;
-    wxSize gridSize;
+    Dimensions gridSize;
     wxRect tablePixelRect;
 
     void setBG(const wxSize& tableSize);
-    void initScreen(const wxSize& tableSize, const TLVec& layout);
+    void initScreen(const TLVec& layout);
+
+    wxPoint toGrid(const wxPoint& point);
+    wxPoint fromGrid(int x, int y);
+    wxPoint fromGrid(const wxPoint& point);
+
+    ThreePoint marked;
 
 private:
     void drawScreen(wxDC& dc);

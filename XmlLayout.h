@@ -12,8 +12,9 @@ public:
     XmlLayout();
 
     bool openFile(const wxString& path);
-    wxSize getDimensions();
+    Dimensions getDimensions();
     void readLayout(TLVec& table);
+    uint8_t getTilesNumber();
 
 private:
     wxString path;

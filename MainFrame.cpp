@@ -23,6 +23,7 @@ void MainFrame::initMenu() {
     wxMenu *menuGame = new wxMenu;
     menuGame->Append(IDM_New_Game, _("Начать сначала"));
     menuGame->Append(IDM_Open, _("Открыть карту"));
+    menuGame->AppendCheckItem(IDM_Solveable, _("Генерировать решаемую карту"));
     menuGame->AppendSeparator();
     menuGame->Append(IDM_Exit, _("Выход"));
 
@@ -63,10 +64,14 @@ void MainFrame::bindMenu() {
         if (layoutPath.IsEmpty())
             openLayout();
         else
-            panel->Start(layoutPath);
+            panel->Start(layoutPath, solveable);
             
         Refresh();
     }, IDM_New_Game);
+
+    Bind(wxEVT_MENU, [this](wxCommandEvent& _) -> void {
+        solveable = _.IsChecked();
+    }, IDM_Solveable);
 }
 
 void MainFrame::openLayout() {
@@ -77,5 +82,5 @@ void MainFrame::openLayout() {
 
     layoutPath = openFileDlg.GetPath();
 
-    panel->Start(layoutPath);
+    panel->Start(layoutPath, solveable);
 }

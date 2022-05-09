@@ -4,7 +4,7 @@
 
 #include "utils.h"
 
-GamePanel::GamePanel(wxFrame* parent) : wxPanel(parent), controller(drawer), sb(parent->GetStatusBar()) {
+GamePanel::GamePanel(wxFrame* parent) : wxPanel(parent), controller(drawer) {
     SetBackgroundStyle(wxBG_STYLE_PAINT);
 
     Bind(wxEVT_PAINT, &GamePanel::OnPaint, this);
@@ -12,21 +12,25 @@ GamePanel::GamePanel(wxFrame* parent) : wxPanel(parent), controller(drawer), sb(
         this->controller.resize(evt.GetSize());
     });
 
-    timer = new wxTimer(this);
+    timer = new wxTimer(this, 1);
     Bind(wxEVT_TIMER, &GamePanel::OnTimer, this, timer->GetId());
 
     Bind(wxEVT_LEFT_DOWN, &GamePanel::OnClick, this);
 }
 
-void GamePanel::Start(const wxString& path) {
+void GamePanel::Start(const wxString& path, bool solveable) {
     controller.stopwatch = 0;
     controller.loadLayout(path);
+    if (solveable)
+        controller.fillSolveableTable();
+    else
+        controller.fillRandom();
 
     timer->Start(1000, wxTIMER_CONTINUOUS);
+    
+    if (sb == nullptr)
+        sb = ((wxFrame*)this->GetParent())->GetStatusBar();
     sb->SetStatusText(LTimeToStr(controller.stopwatch));
-
-
-    drawer.initScreen(drawer.tableSize, *controller.getTable());
 }
 
 void GamePanel::OnPaint(wxPaintEvent& _) {
@@ -41,13 +45,17 @@ void GamePanel::OnTimer(wxTimerEvent& _) {
 }
 
 void GamePanel::OnClick(wxMouseEvent& _) {
-    wxPoint res = controller.toGrid(ScreenToClient(wxGetMousePosition()));
+    wxPoint posPlain = drawer.toGrid(ScreenToClient(wxGetMousePosition()));
 
-    if (res.x > -1) {
-        auto card = controller.getCardByPosition(res);
-        if (card != nullptr) {
+    ThreePoint pos = {-1, posPlain.x, posPlain.y};
+
+    if (pos.x > -1) {
+        auto card = controller.getCardByPosition(pos);
+
+        drawer.marked = pos;
+
+        if (pos.z >= 0 && controller.available(pos))
             controller.select(card);
-        }
     }
 
     Refresh();

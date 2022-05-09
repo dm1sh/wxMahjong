@@ -24,6 +24,8 @@ private:
 
     const wxString dataDirPath;
     wxString layoutPath;
+
+    bool solveable = false;
 };
 
 enum
@@ -33,7 +35,8 @@ enum
     IDM_Help = wxID_HELP,
     IDM_About = wxID_ABOUT,
     IDM_Rules = wxID_HIGHEST + 1,
-    IDM_New_Game
+    IDM_New_Game,
+    IDM_Solveable
 };
 
 #endif

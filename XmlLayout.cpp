@@ -15,8 +15,9 @@ bool XmlLayout::openFile(const wxString& openPath) {
     return true;
 }
 
-wxSize XmlLayout::getDimensions() {
-    return { wxAtoi(layoutDoc.GetRoot()->GetAttribute("ux")) + 2,
+Dimensions XmlLayout::getDimensions() {
+    return { wxAtoi(layoutDoc.GetRoot()->GetAttribute("layers")),
+            wxAtoi(layoutDoc.GetRoot()->GetAttribute("ux")) + 2,
             wxAtoi(layoutDoc.GetRoot()->GetAttribute("uy")) + 2 };
 }
 
@@ -29,13 +30,15 @@ void XmlLayout::readLayout(TLVec& table) {
         if (tilePtr->GetName().IsSameAs("tile")) {
             x = wxAtoi(tilePtr->GetAttribute("x"));
             y = wxAtoi(tilePtr->GetAttribute("y"));
-            l = wxAtoi(tilePtr->GetAttribute("layer"));
+            l = wxAtoi(tilePtr->GetAttribute("layer")) - 1;
 
-            table[x][y].push_back(std::make_pair(l - 1, (uint8_t)-1));
-
-            table[x][y].at(table[x][y].size() -1).second = (random()) % 37;
+            table[l][x][y] = -1;
         }
 
         tilePtr = tilePtr->GetNext();
     }
+}
+
+uint8_t XmlLayout::getTilesNumber() {
+    return wxAtoi(layoutDoc.GetRoot()->GetAttribute("tiles"));
 }
