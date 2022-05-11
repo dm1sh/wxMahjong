@@ -9,10 +9,13 @@ OBJECTS := $(addprefix $(BDIR)/,$(patsubst %.cpp,%.o,$(wildcard *.cpp)))
 $(BDIR)/%.o: %.cpp
 	$(CXX) -c `wx-config --cxxflags` -o $@ $<
 
-all: $(PROGRAM)
+all: $(BDIR) $(PROGRAM)
 
 $(PROGRAM): $(OBJECTS)
 	$(CXX) -o $(BDIR)/$(PROGRAM) $(OBJECTS) `wx-config --libs`
+
+$(BDIR):
+	mkdir $@
 
 clean:
 	rm -f $(BDIR)/*.o $(PROGRAM)
