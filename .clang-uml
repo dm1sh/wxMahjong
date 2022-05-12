@@ -1,8 +1,0 @@
-compilation_database_dir: build
-output_directory: diagrams
-generate_method_arguments: none
-diagrams:
-  config_class:
-    type: class
-    glob:
-      - ./*.h
