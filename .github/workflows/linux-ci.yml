@@ -8,17 +8,20 @@ on:
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
-
     steps:
-    - uses: actions/checkout@v2
-    - name: Install GCC11, pCap, wxWidgets
-      run: sudo apt update && sudo apt install -y gcc-11 g++-11 libwxgtk3.0-gtk3-dev && sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-11 110 --slave /usr/bin/g++ g++ /usr/bin/g++-11
-    - name: Display versions of tools and libraries
-      continue-on-error: true
-      run: uname -a; wx-config --list; wx-config --cxxflags; wx-config --libs; g++ --version | grep g++
-    - name: make
-      run: make
-    - name: Check binary file
-      run: ls -alh build/wxMahjong; file build/wxMahjong
+      - uses: actions/checkout@v2
+      - name: Install GCC11, pCap, wxWidgets
+        run: sudo apt update && sudo apt install -y gcc-11 g++-11 libwxgtk3.0-gtk3-dev && sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-11 110 --slave /usr/bin/g++ g++ /usr/bin/g++-11
+      - name: Display versions of tools and libraries
+        continue-on-error: true
+        run: uname -a; wx-config --list; wx-config --cxxflags; wx-config --libs; g++ --version | grep g++
+      - name: make
+        run: make
+      - name: Check binary file
+        run: ls -alh build/wxMahjong; file build/wxMahjong
+      - uses: softprops/action-gh-release@v1
+        name: Release 
+        if: startsWith(github.ref, 'refs/tags/')
+        with: 
+          files: build/wxMahjong
