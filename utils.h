@@ -10,9 +10,10 @@ using std::vector;
 wxString LTimeToStr(int time);
 int upDiv(int a, int b);
 wxString itowxS(int a);
+wxString PRemaining(uint8_t remaining);
 
-#define min(a, b) (a + b - abs(a - b)) / 2
-#define max(a, b) (a + b + abs(a - b)) / 2
+#define mmin(a, b) (a + b - abs(a - b)) / 2
+#define mmax(a, b) (a + b + abs(a - b)) / 2
 
 using CardT = int16_t;
 
@@ -32,6 +33,18 @@ public:
     int z;
 };
 
+class CardEntry {
+public:
+    ThreePoint pos;
+    CardT id;
+};
+
 using TLVec = vector<vector<vector<CardT>>>;
+
+enum Values {
+    MATCHED = -3,
+    EMPTY,
+    FREE
+};
 
 #endif

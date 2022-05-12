@@ -32,7 +32,7 @@ void XmlLayout::readLayout(TLVec& table) {
             y = wxAtoi(tilePtr->GetAttribute("y"));
             l = wxAtoi(tilePtr->GetAttribute("layer")) - 1;
 
-            table[l][x][y] = -1;
+            table[l][x][y] = FREE;
         }
 
         tilePtr = tilePtr->GetNext();

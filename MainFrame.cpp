@@ -11,7 +11,7 @@ MainFrame::MainFrame()
     initMenu();
     bindMenu();
 
-    CreateStatusBar();
+    CreateStatusBar(2);
 
     panel = new GamePanel(this);
     panel->SetFocus();
@@ -24,6 +24,9 @@ void MainFrame::initMenu() {
     menuGame->Append(IDM_New_Game, _("Начать сначала"));
     menuGame->Append(IDM_Open, _("Открыть карту"));
     menuGame->AppendCheckItem(IDM_Solveable, _("Генерировать решаемую карту"));
+    menuGame->AppendSeparator();
+    menuGame->Append(IDM_Undo, _("Отменить ход"));
+    menuGame->Append(IDM_Reshuffle, _("Перемешать поле"));
     menuGame->AppendSeparator();
     menuGame->Append(IDM_Exit, _("Выход"));
 
@@ -72,6 +75,14 @@ void MainFrame::bindMenu() {
     Bind(wxEVT_MENU, [this](wxCommandEvent& _) -> void {
         solveable = _.IsChecked();
     }, IDM_Solveable);
+
+    Bind(wxEVT_MENU, [this](wxCommandEvent& _) -> void {
+        panel->undo();
+    }, IDM_Undo);
+
+    Bind(wxEVT_MENU, [this](wxCommandEvent& _) -> void {
+        panel->reshuffle(solveable);
+    }, IDM_Reshuffle);
 }
 
 void MainFrame::openLayout() {

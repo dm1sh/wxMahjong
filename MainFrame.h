@@ -36,7 +36,9 @@ enum
     IDM_About = wxID_ABOUT,
     IDM_Rules = wxID_HIGHEST + 1,
     IDM_New_Game,
-    IDM_Solveable
+    IDM_Solveable,
+    IDM_Undo,
+    IDM_Reshuffle
 };
 
 #endif

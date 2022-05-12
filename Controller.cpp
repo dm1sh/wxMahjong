@@ -10,7 +10,7 @@ void Controller::resize(const wxSize& tableSize) {
     resolution = tableSize;
 
     if (stopwatch >= 0) {
-        int gridPoint = min(resolution.x / (gridSize.x * TILE_WIDTH),
+        int gridPoint = mmin(resolution.x / (gridSize.x * TILE_WIDTH),
                             resolution.y / (gridSize.y * TILE_HEIGHT));
         
         if (gridPoint > 2) {
@@ -32,7 +32,7 @@ void Controller::loadLayout(const wxString& path) {
 
     drawer.gridSize = layout.getDimensions();
 
-    table = TLVec(drawer.gridSize.z, vector<vector<CardT>>(drawer.gridSize.x, vector<CardT>(drawer.gridSize.y, -2)));
+    table = TLVec(drawer.gridSize.z, vector<vector<CardT>>(drawer.gridSize.x, vector<CardT>(drawer.gridSize.y, EMPTY)));
 
     layout.readLayout(table);
 
@@ -50,6 +50,13 @@ TLVec& Controller::getTable() {
     return table;
 }
 
+void Controller::fill(bool solveable) {
+    if (solveable)
+        fillSolveableTable();
+    else
+        fillRandom();
+}
+
 void Controller::fillSolveableTable() {
     time_t start_time = time(NULL);
 
@@ -65,7 +72,7 @@ void Controller::fillSolveableTable() {
         z = pos / (gridSize.x * gridSize.y);
         x = (pos / gridSize.y) % gridSize.x;
         y = pos % gridSize.y;
-    } while (table[z][x][y] != -1);
+    } while (table[z][x][y] != FREE);
 
     positions.push_back({z, x, y});
 
@@ -111,21 +118,40 @@ int Controller::emplace_rand(int id, std::list<ThreePoint> positions, int past_p
     return 0;
 }
 
+void Controller::free_table() {
+    for (int z = 0; z < drawer.gridSize.z; z++)
+        for (int x = 0; x < drawer.gridSize.x; x++)
+            for (int y = 0; y < drawer.gridSize.y; y++) {
+                CardT id = table[z][x][y];
+
+                if (id >= 0) {
+                    cardsCounter[id]++;
+
+                    table[z][x][y] = FREE;
+                }
+            }
+
+    steps = decltype(steps)();
+}
+
 void Controller::fillRandom() {
     srand(time(NULL));
-    int not_end = remaining;
+    
+    wxLogDebug(wxString::Format("%i", remaining));
+
+    auto not_end = remaining;
 
     for (int z = 0; z < drawer.gridSize.z && not_end; z++)
         for (int x = 0; x < drawer.gridSize.x && not_end; x++)
             for (int y = 0; y < drawer.gridSize.y && not_end; y++)
-                if (table[z][x][y] == -1) {
+                if (table[z][x][y] == FREE) {
                     table[z][x][y] = genRandId();
                     not_end--;
                 }
 }
 
-int Controller::genRandId() {
-    int id;
+CardT Controller::genRandId() {
+    CardT id;
 
     int w = 0;
 
@@ -246,19 +272,34 @@ bool Controller::sideFree(const ThreePoint& point) {
     return lfree || rfree;
 }
 
-void Controller::select(CardT* card) {
-    wxLogDebug(wxString::Format("%i %p", *card, card));
+void Controller::handleClick(const wxPoint& point) {
+    wxPoint posPlain = drawer.toGrid(point);
 
-    if (selected != nullptr && sameValues(*card, *selected) && selected != card) {
-        *selected = -3;
-        *card = -3;
-        selected = nullptr;
+    ThreePoint pos = {-1, posPlain.x, posPlain.y};
 
-        drawer.marked = {-1, -1, -1};
-    } else
-        selected = card;
+    if (pos.x > -1) {
+        auto card = getCardByPosition(pos);
+
+        if (pos.z >= 0 && available(pos)) {
+            if (selected != nullptr && sameValues(*card, *selected) && selected != card) {
+                steps.push({CardEntry{drawer.marked, *selected}, CardEntry{pos, *card}});
+                
+                *selected = MATCHED;
+                *card = MATCHED;
+
+                selected = nullptr;
+
+                remaining -= 2;
+
+                drawer.marked = {-1, -1, -1};
+            } else {
+                selected = card;
+                drawer.marked = pos;
+            }
         
-    drawer.initScreen(table);
+            drawer.initScreen(table);
+        }
+    }
 }
 
 bool Controller::sameValues(CardT a, CardT b) {
@@ -269,4 +310,16 @@ bool Controller::sameValues(CardT a, CardT b) {
         return true;
         
     return false;
+}
+
+void Controller::undo() {
+    if (steps.size()) {
+        for (const CardEntry& entry : steps.top()) {
+            table[entry.pos.z][entry.pos.x][entry.pos.y] = entry.id;
+            cardsCounter[entry.id]++;
+        }
+
+        remaining += 2;
+        steps.pop();
+    }
 }

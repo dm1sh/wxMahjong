@@ -3,6 +3,7 @@
 
 #include <array>
 #include <list>
+#include <stack>
 
 #include "wxw.h"
 
@@ -19,22 +20,17 @@ public:
 
     void loadLayout(const wxString& path);
 
-    bool available(const ThreePoint& point);
-    bool upFree(const ThreePoint& point);
-    bool sideFree(const ThreePoint& point);
-
-    void select(CardT* card);
+    void handleClick(const wxPoint& point);
 
     TLVec& getTable();
 
-    void fillSolveableTable();
-    void fillRandom();
+    void free_table();
 
-    CardT* getCardByPosition(ThreePoint& point);
-
-    std::array<uint8_t, TILE_IMAGES_N>cardsCounter;
+    void fill(bool solveable);
 
     uint8_t remaining;
+
+    void undo();
 private:
     Drawer& drawer;
     XmlLayout layout;
@@ -43,11 +39,24 @@ private:
 
     CardT* selected = nullptr;
 
+    void fillSolveableTable();
+    void fillRandom();
+
     int emplace_rand(int id, std::list<ThreePoint> positions, int past_pos, std::list<ThreePoint>::iterator past_ptr);
 
-    int genRandId();
+    CardT genRandId();
+
+    CardT* getCardByPosition(ThreePoint& point);
+
+    bool available(const ThreePoint& point);
+    bool upFree(const ThreePoint& point);
+    bool sideFree(const ThreePoint& point);
 
     bool sameValues(CardT a, CardT b);
+
+    std::array<uint8_t, TILE_IMAGES_N>cardsCounter;
+
+    std::stack<std::array<CardEntry, 2>> steps;
 };
 
 #endif

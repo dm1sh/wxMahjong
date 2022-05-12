@@ -11,3 +11,7 @@ int upDiv(int a, int b) {
 wxString itowxS(int a) {
     return wxString::Format("%i", a);
 }
+
+wxString PRemaining(uint8_t remaining) {
+    return wxString::Format("%i%%", remaining*100 / 144);
+}

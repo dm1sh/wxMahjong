@@ -14,6 +14,9 @@ public:
 
     void Start(const wxString& path, bool solveable);
 
+    void undo();
+    void reshuffle(bool solveable);
+
 private:
     Drawer drawer;
     Controller controller;

@@ -21,16 +21,16 @@ GamePanel::GamePanel(wxFrame* parent) : wxPanel(parent), controller(drawer) {
 void GamePanel::Start(const wxString& path, bool solveable) {
     controller.stopwatch = 0;
     controller.loadLayout(path);
-    if (solveable)
-        controller.fillSolveableTable();
-    else
-        controller.fillRandom();
+    controller.fill(solveable);
 
     timer->Start(1000, wxTIMER_CONTINUOUS);
     
     if (sb == nullptr)
         sb = ((wxFrame*)this->GetParent())->GetStatusBar();
-    sb->SetStatusText(LTimeToStr(controller.stopwatch));
+    sb->SetStatusText(LTimeToStr(controller.stopwatch), 0);
+    sb->SetStatusText(PRemaining(controller.remaining), 1);
+
+    drawer.initScreen(controller.getTable());
 }
 
 void GamePanel::OnPaint(wxPaintEvent& _) {
@@ -41,22 +41,28 @@ void GamePanel::OnPaint(wxPaintEvent& _) {
 
 void GamePanel::OnTimer(wxTimerEvent& _) {
     controller.stopwatch += 1;
-    sb->SetStatusText(LTimeToStr(controller.stopwatch));
+    sb->SetStatusText(LTimeToStr(controller.stopwatch), 0);
 }
 
 void GamePanel::OnClick(wxMouseEvent& _) {
-    wxPoint posPlain = drawer.toGrid(ScreenToClient(wxGetMousePosition()));
+    controller.handleClick(ScreenToClient(wxGetMousePosition()));
+    sb->SetStatusText(PRemaining(controller.remaining), 1);
 
-    ThreePoint pos = {-1, posPlain.x, posPlain.y};
+    Refresh();
+}
 
-    if (pos.x > -1) {
-        auto card = controller.getCardByPosition(pos);
+void GamePanel::undo() {
+    controller.undo();
 
-        drawer.marked = pos;
+    drawer.initScreen(controller.getTable());
 
-        if (pos.z >= 0 && controller.available(pos))
-            controller.select(card);
-    }
+    Refresh();
+}
+
+void GamePanel::reshuffle(bool solveable) {
+    controller.free_table();
+    controller.fill(solveable);
+    drawer.initScreen(controller.getTable());
 
     Refresh();
 }
