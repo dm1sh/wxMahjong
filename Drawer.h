@@ -18,7 +18,7 @@ public:
 
     wxSize tableSize;
 
-    wxSize tilePixelSize; // 600x800
+    wxSize tilePixelSize; // кратно 600x800
     wxSize resolution;
     Dimensions gridSize;
     wxRect tablePixelRect;
@@ -36,7 +36,7 @@ private:
     void drawScreen(wxDC& dc);
     void drawTile(wxDC& dc, int8_t index, const wxPoint& position, uint8_t zIndex);
   
-    wxImage tileImages[40];
+    wxImage tileImages[TILE_IMAGES_N];
 
     wxBitmap bgBitmap;
     wxBitmap screenBitmap;

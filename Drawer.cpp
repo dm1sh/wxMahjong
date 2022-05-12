@@ -2,10 +2,6 @@
 
 static const char* tileImageNames[] = { "Pin1", "Pin2", "Pin3", "Pin4", "Pin5", "Pin6", "Pin7", "Pin8", "Pin9", "Sou1", "Sou2", "Sou3", "Sou4", "Sou5", "Sou6", "Sou7", "Sou8", "Sou9", "Man1", "Man2", "Man3", "Man4", "Man5", "Man6", "Man7", "Man8", "Man9", "Chun", "Haku", "Hatsu", "Nan", "Pei", "Shaa", "Ton", "Flower1", "Flower2", "Flower3", "Flower4", "Season1", "Season2", "Season3", "Season4" };
 
-/**
- * TODO: fix not loading last two tiles icons
- */
-
 Drawer::Drawer():  marked{-1, -1, -1} {
     for (int i = 0; i < TILE_IMAGES_N; i++) {
         if (!tileImages[i].LoadFile(_("./resources/tiles/") + _(tileImageNames[i]) + _(".png"), wxBITMAP_TYPE_PNG))
