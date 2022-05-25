@@ -4,10 +4,14 @@
 #include "RulesDlg.h"
 #include "AboutDlg.h"
 
+#include "resources/icon.xpm"
+
 MainFrame::MainFrame()
     : wxFrame(nullptr, wxID_ANY, _("Маджонг (пасьянс)"), wxDefaultPosition, wxSize(800, 600)),
     dataDirPath(wxStandardPaths::Get().GetUserDataDir())
 {
+    SetIcon(logo_icon);
+
     initMenu();
     bindMenu();
 

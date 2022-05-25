@@ -12,7 +12,7 @@ $(BDIR)/%.o: %.cpp
 all: $(BDIR) $(PROGRAM)
 
 $(PROGRAM): $(OBJECTS)
-	$(CXX) -o $(BDIR)/$(PROGRAM) $(OBJECTS) `wx-config --libs`
+	$(CXX) -o $(BDIR)/$(PROGRAM) $(OBJECTS) `wx-config --libs` -ggdb3
 
 $(BDIR):
 	mkdir $@
