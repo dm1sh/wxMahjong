@@ -18,14 +18,14 @@ private:
     void initMenu();
     void bindMenu();
 
-    void openLayout();
-
     GamePanel *panel;
+
+    bool openLayout();
 
     const wxString dataDirPath;
     wxString layoutPath;
 
-    bool solveable = false;
+    bool solveable = false; // determites wether to generate solveable or completely random map
 };
 
 enum

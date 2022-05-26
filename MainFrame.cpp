@@ -20,7 +20,8 @@ MainFrame::MainFrame()
     panel = new GamePanel(this);
     panel->SetFocus();
 
-    openLayout();
+    if (openLayout())
+        panel->Start(layoutPath, solveable);
 }
 
 void MainFrame::initMenu() {
@@ -53,7 +54,8 @@ void MainFrame::bindMenu() {
     }, IDM_Exit);
 
     Bind(wxEVT_MENU, [this](wxCommandEvent& _) -> void {
-        openLayout();
+        if (openLayout())
+            panel->Start(layoutPath, solveable);
     }, IDM_Open);
 
     Bind(wxEVT_MENU, [this](wxCommandEvent& _) -> void {
@@ -69,16 +71,14 @@ void MainFrame::bindMenu() {
     }, IDM_Rules);
 
     Bind(wxEVT_MENU, [this](wxCommandEvent& _) -> void {
-        if (layoutPath.IsEmpty())
-            openLayout();
-        else
+        if (!layoutPath.IsEmpty() || openLayout()) {
             panel->Start(layoutPath, solveable);
-            
-        Refresh();
+            Refresh();
+        }
     }, IDM_New_Game);
 
-    Bind(wxEVT_MENU, [this](wxCommandEvent& _) -> void {
-        solveable = _.IsChecked();
+    Bind(wxEVT_MENU, [this](wxCommandEvent& evt) -> void {
+        solveable = evt.IsChecked();
     }, IDM_Solveable);
 
     Bind(wxEVT_MENU, [this](wxCommandEvent& _) -> void {
@@ -90,13 +90,16 @@ void MainFrame::bindMenu() {
     }, IDM_Reshuffle);
 }
 
-void MainFrame::openLayout() {
-    wxFileDialog openFileDlg(this, "Открыть карту", dataDirPath + wxFileName::GetPathSeparator() + _("layouts"), "Turtle.smlf", "Файлы Mahjong карт (*.smlf)|*.smlf", wxFD_OPEN | wxFD_FILE_MUST_EXIST);
+/**
+ * Shows a file opening dialog asking for .smlf file if succed, sets its path to layoutPath
+ * @return true if user have chosen a file, false if cancelled
+ */
+bool MainFrame::openLayout() {
+    wxFileDialog openFileDlg(this, _("Открыть карту"), dataDirPath + wxFileName::GetPathSeparator() + _("layouts"), _("Turtle.smlf"), _("Файлы Mahjong карт (*.smlf)|*.smlf"), wxFD_OPEN | wxFD_FILE_MUST_EXIST);
 
     if (openFileDlg.ShowModal() == wxID_CANCEL)
-        return;
+        return false;
 
-    layoutPath = openFileDlg.GetPath();
-
-    panel->Start(layoutPath, solveable);
+    layoutPath =  openFileDlg.GetPath();
+    return true;
 }
