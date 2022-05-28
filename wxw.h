@@ -12,20 +12,4 @@
 #endif
 #define _(s) wxString::FromUTF8(s)
 
-// class wxTrackable {};
-// class wxObject {};
-// class wxEventHandler : wxObject, wxTrackable {};
-// class wxEventFilter {};
-// class wxAppConsole : wxEventHandler, wxEventFilter {};
-// class wxApp : wxAppConsole {};
-
-// class wxWindow : wxEventHandler {};
-// class wxNotOwnedWindow : wxWindow {};
-// class wxTopLevelWindow : wxNotOwnedWindow {};
-// class wxFrame : wxTopLevelWindow {};
-
-// class wxCommandEvent {};
-
-// #define DECLARE_EVENT_TABLE() void none();
-
 #endif

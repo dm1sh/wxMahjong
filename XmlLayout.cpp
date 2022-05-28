@@ -1,6 +1,6 @@
 #include "XmlLayout.h"
 
-XmlLayout::XmlLayout() : path("") { }
+XmlLayout::XmlLayout() : path("") {}
 
 bool XmlLayout::openFile(const wxString& openPath) {
     if (openPath.IsSameAs(path))
@@ -16,9 +16,9 @@ bool XmlLayout::openFile(const wxString& openPath) {
 }
 
 Dimensions XmlLayout::getDimensions() {
-    return { wxAtoi(layoutDoc.GetRoot()->GetAttribute("layers")),
+    return {wxAtoi(layoutDoc.GetRoot()->GetAttribute("layers")),
             wxAtoi(layoutDoc.GetRoot()->GetAttribute("ux")) + 2,
-            wxAtoi(layoutDoc.GetRoot()->GetAttribute("uy")) + 2 };
+            wxAtoi(layoutDoc.GetRoot()->GetAttribute("uy")) + 2};
 }
 
 void XmlLayout::readLayout(TLVec& table) {

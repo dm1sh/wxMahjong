@@ -75,6 +75,10 @@
     "thread": "cpp",
     "typeinfo": "cpp",
     "variant": "cpp",
-    "*.xpm": "cpp"
-  }
+    "*.xpm": "cpp",
+    "cfenv": "cpp",
+    "charconv": "cpp",
+    "shared_mutex": "cpp"
+  },
+  "C_Cpp.default.cppStandard": "c++20"
 }

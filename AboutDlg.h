@@ -3,10 +3,9 @@
 
 #include "wxw.h"
 
-class AboutDlg : public wxDialog
-{
+class AboutDlg : public wxDialog {
 public:
-    AboutDlg(wxWindow *parent, wxWindowID id);
+    AboutDlg(wxWindow* parent, wxWindowID id);
 };
 
 #endif

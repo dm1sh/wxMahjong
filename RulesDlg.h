@@ -3,10 +3,9 @@
 
 #include "wxw.h"
 
-class RulesDlg : public wxDialog
-{
+class RulesDlg : public wxDialog {
 public:
-    RulesDlg(wxWindow *parent, wxWindowID id);
+    RulesDlg(wxWindow* parent, wxWindowID id);
 };
 
 #endif

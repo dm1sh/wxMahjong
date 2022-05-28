@@ -3,10 +3,9 @@
 
 #include "wxw.h"
 
-class HelpDlg : public wxDialog
-{
+class HelpDlg : public wxDialog {
 public:
-    HelpDlg(wxWindow *parent, wxWindowID id);
+    HelpDlg(wxWindow* parent, wxWindowID id);
 };
 
 #endif

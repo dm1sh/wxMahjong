@@ -3,8 +3,7 @@
 
 #include "wxw.h"
 
-class MyApp : public wxApp
-{
+class MyApp : public wxApp {
 public:
     virtual bool OnInit() override;
 };

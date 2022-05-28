@@ -3,13 +3,12 @@
 
 wxIMPLEMENT_APP(MyApp);
 
-bool MyApp::OnInit()
-{
+bool MyApp::OnInit() {
     wxImage::AddHandler(new wxPNGHandler());
 
-    MainFrame *frame = new MainFrame();
+    MainFrame* frame = new MainFrame();
     frame->Show(true);
     SetTopWindow(frame);
-    
+
     return true;
 }

@@ -1,0 +1,5 @@
+BreakBeforeBraces: Attach
+IndentWidth: 4
+PointerAlignment: Left
+AllowShortFunctionsOnASingleLine: Inline
+AccessModifierOffset: -4

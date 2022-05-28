@@ -5,12 +5,10 @@
 
 #include "GamePanel.h"
 
-#include <wx/stdpaths.h>
 #include <wx/filename.h>
+#include <wx/stdpaths.h>
 
-/// @uml{style[#line.dotted:blue]}
-class MainFrame : public wxFrame
-{
+class MainFrame : public wxFrame {
 public:
     MainFrame();
 
@@ -18,18 +16,18 @@ private:
     void initMenu();
     void bindMenu();
 
-    GamePanel *panel;
+    GamePanel* panel;
 
     bool openLayout();
 
     const wxString dataDirPath;
     wxString layoutPath;
 
-    bool solveable = false; // determites wether to generate solveable or completely random map
+    bool solveable = false; // determites wether to generate solveable or
+                            // completely random map
 };
 
-enum
-{
+enum {
     IDM_Open = wxID_OPEN,
     IDM_Exit = wxID_EXIT,
     IDM_Help = wxID_HELP,
