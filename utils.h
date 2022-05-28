@@ -19,15 +19,15 @@ using CardT = int16_t;
 
 class Dimensions : public wxSize {
 public:
-    Dimensions(int _z, int _x, int _y): wxSize(_x, _y), z(_z) {};
-    Dimensions(): wxSize(), z(0) {};
+    Dimensions(int _z, int _x, int _y) : wxSize(_x, _y), z(_z){};
+    Dimensions() : wxSize(), z(0){};
     int z;
 };
 
 class ThreePoint {
 public:
-    ThreePoint(int _z, int _x, int _y): x(_x), y(_y), z(_z) {};
-    ThreePoint(): x(0), y(0), z(0) {};
+    ThreePoint(int _z, int _x, int _y) : x(_x), y(_y), z(_z){};
+    ThreePoint() : x(0), y(0), z(0){};
     int x;
     int y;
     int z;
@@ -41,10 +41,8 @@ public:
 
 using TLVec = vector<vector<vector<CardT>>>;
 
-enum Values {
-    MATCHED = -3,
-    EMPTY,
-    FREE
-};
+enum Values { MATCHED = -3, EMPTY, FREE };
+
+bool isPositive(const wxSize& size);
 
 #endif

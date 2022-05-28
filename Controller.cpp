@@ -1,38 +1,15 @@
 #include "Controller.h"
 
-Controller::Controller(Drawer& drawer): drawer(drawer) {};
-
-void Controller::resize(const wxSize& tableSize) {
-    wxSize& resolution = drawer.resolution;
-    Dimensions& gridSize = drawer.gridSize;
-    wxRect& tablePixelRect = drawer.tablePixelRect;
-
-    resolution = tableSize;
-
-    if (stopwatch >= 0) {
-        int gridPoint = mmin(resolution.x / (gridSize.x * TILE_WIDTH),
-                            resolution.y / (gridSize.y * TILE_HEIGHT));
-        
-        if (gridPoint > 2) {
-            tablePixelRect.SetSize({gridPoint * TILE_WIDTH * gridSize.x, gridPoint * TILE_HEIGHT * gridSize.y});
-
-            drawer.tilePixelSize.Set(gridPoint * TILE_WIDTH, gridPoint * TILE_HEIGHT);
-        }
-
-        tablePixelRect.SetPosition({(resolution.x - tablePixelRect.width) / 2,
-                                    (resolution.y - tablePixelRect.height) / 2});
-    }
-
-    drawer.setBG(tableSize);
-    drawer.initScreen(table);
-}
+Controller::Controller(Drawer& drawer) : drawer(drawer){};
 
 void Controller::loadLayout(const wxString& path) {
     layout.openFile(path);
 
-    drawer.gridSize = layout.getDimensions();
+    gridSize = layout.getDimensions();
 
-    table = TLVec(drawer.gridSize.z, vector<vector<CardT>>(drawer.gridSize.x, vector<CardT>(drawer.gridSize.y, EMPTY)));
+    table = TLVec(
+        gridSize.z,
+        vector<vector<CardT>>(gridSize.x, vector<CardT>(gridSize.y, EMPTY)));
 
     layout.readLayout(table);
 
@@ -60,8 +37,6 @@ void Controller::fill(bool solveable) {
 void Controller::fillSolveableTable() {
     time_t start_time = time(NULL);
 
-    auto& gridSize = drawer.gridSize;
-
     std::list<ThreePoint> positions;
 
     int overall = gridSize.z * gridSize.x * gridSize.y;
@@ -87,16 +62,19 @@ void Controller::fillSolveableTable() {
             past_pos = emplace_rand(id, positions, past_pos, past_ptr);
 
             cardsCounter[id]--;
-        } else 
+        } else
             emplace_rand(id, positions, past_pos, past_ptr);
     }
 
-    wxLogInfo(wxString::Format("Filling took %i seconds", start_time - time(NULL)));
+    wxLogInfo(
+        wxString::Format("Filling took %i seconds", start_time - time(NULL)));
 }
 
-int Controller::emplace_rand(int id, std::list<ThreePoint> positions, int past_pos, std::list<ThreePoint>::iterator past_ptr) {
+int Controller::emplace_rand(int id, std::list<ThreePoint> positions,
+                             int past_pos,
+                             std::list<ThreePoint>::iterator past_ptr) {
     int d = rand() % positions.size() - past_pos;
-    
+
     if (d > 0)
         for (int i = 0; i < d; i++)
             past_ptr++;
@@ -119,9 +97,9 @@ int Controller::emplace_rand(int id, std::list<ThreePoint> positions, int past_p
 }
 
 void Controller::free_table() {
-    for (int z = 0; z < drawer.gridSize.z; z++)
-        for (int x = 0; x < drawer.gridSize.x; x++)
-            for (int y = 0; y < drawer.gridSize.y; y++) {
+    for (int z = 0; z < gridSize.z; z++)
+        for (int x = 0; x < gridSize.x; x++)
+            for (int y = 0; y < gridSize.y; y++) {
                 CardT id = table[z][x][y];
 
                 if (id >= 0) {
@@ -136,14 +114,14 @@ void Controller::free_table() {
 
 void Controller::fillRandom() {
     srand(time(NULL));
-    
+
     wxLogDebug(wxString::Format("%i", remaining));
 
     auto not_end = remaining;
 
-    for (int z = 0; z < drawer.gridSize.z && not_end; z++)
-        for (int x = 0; x < drawer.gridSize.x && not_end; x++)
-            for (int y = 0; y < drawer.gridSize.y && not_end; y++)
+    for (int z = 0; z < gridSize.z && not_end; z++)
+        for (int x = 0; x < gridSize.x && not_end; x++)
+            for (int y = 0; y < gridSize.y && not_end; y++)
                 if (table[z][x][y] == FREE) {
                     table[z][x][y] = genRandId();
                     not_end--;
@@ -166,8 +144,8 @@ CardT Controller::genRandId() {
 }
 
 /**
- * It also changes point to top right coordinate of card 
-*/
+ * It also changes point to top right coordinate of card
+ */
 CardT* Controller::getCardByPosition(ThreePoint& point) {
     int8_t topIndex = -1;
     CardT* res = nullptr;
@@ -185,10 +163,10 @@ CardT* Controller::getCardByPosition(ThreePoint& point) {
 
     if (point.x > 0)
         for (int z = table.size() - 1; z >= 0; z--)
-            if (table[z][point.x-1][point.y] >= 0) {
+            if (table[z][point.x - 1][point.y] >= 0) {
                 if (z > topIndex) {
                     topIndex = z;
-                    res = &table[z][point.x-1][point.y];
+                    res = &table[z][point.x - 1][point.y];
 
                     realPos.x = point.x - 1;
                     realPos.y = point.y;
@@ -198,10 +176,10 @@ CardT* Controller::getCardByPosition(ThreePoint& point) {
 
     if (point.y > 0)
         for (int z = table.size() - 1; z >= 0; z--)
-            if (table[z][point.x][point.y-1] >= 0) {
+            if (table[z][point.x][point.y - 1] >= 0) {
                 if (z > topIndex) {
                     topIndex = z;
-                    res = &table[z][point.x][point.y-1];
+                    res = &table[z][point.x][point.y - 1];
 
                     realPos.x = point.x;
                     realPos.y = point.y - 1;
@@ -211,10 +189,10 @@ CardT* Controller::getCardByPosition(ThreePoint& point) {
 
     if (point.x > 0 && point.y > 0)
         for (int z = table.size() - 1; z >= 0; z--)
-            if (table[z][point.x-1][point.y-1] >= 0) {
+            if (table[z][point.x - 1][point.y - 1] >= 0) {
                 if (z > topIndex) {
                     topIndex = z;
-                    res = &table[z][point.x-1][point.y-1];
+                    res = &table[z][point.x - 1][point.y - 1];
 
                     realPos.x = point.x - 1;
                     realPos.y = point.y - 1;
@@ -229,45 +207,50 @@ CardT* Controller::getCardByPosition(ThreePoint& point) {
     return res;
 }
 
-bool Controller::available(const ThreePoint& point) {
+bool Controller::available(const ThreePoint& point) const {
     return upFree(point) && sideFree(point);
 }
 
-bool Controller::upFree(const ThreePoint& point) {
+bool Controller::upFree(const ThreePoint& point) const {
 
     if (point.z == table.size() - 1)
         return true;
 
-    return !(
-         (table[point.z + 1][point.x][point.y] >= 0) ||
-         (point.x > 0 && table[point.z + 1][point.x - 1][point.y] >= 0) ||
-         (point.y > 0 && table[point.z + 1][point.x][point.y - 1] >= 0) ||
-         (point.x > 0 && point.y > 0 && table[point.z + 1][point.x - 1][point.y - 1] >= 0) ||
-         (point.x < table[point.z].size() - 1 && table[point.z + 1][point.x + 1][point.y] >= 0) ||
-         (point.y < table[point.z][point.x].size() - 1 && table[point.z + 1][point.x][point.y + 1] >= 0) ||
-         (point.x < table[point.z].size() - 1 && point.y < table[point.z][point.x].size() - 1 && table[point.z + 1][point.x + 1][point.y + 1] >= 0) ||
-         (point.x > 0 && point.y < table[point.z][point.x].size() - 1 && table[point.z + 1][point.x - 1][point.y + 1] >= 0) ||
-         (point.x < table[point.z].size() - 1 && point.y > 0 && table[point.z + 1][point.x + 1][point.y - 1] >= 0)
-       );
+    return !((table[point.z + 1][point.x][point.y] >= 0) ||
+             (point.x > 0 && table[point.z + 1][point.x - 1][point.y] >= 0) ||
+             (point.y > 0 && table[point.z + 1][point.x][point.y - 1] >= 0) ||
+             (point.x > 0 && point.y > 0 &&
+              table[point.z + 1][point.x - 1][point.y - 1] >= 0) ||
+             (point.x < table[point.z].size() - 1 &&
+              table[point.z + 1][point.x + 1][point.y] >= 0) ||
+             (point.y < table[point.z][point.x].size() - 1 &&
+              table[point.z + 1][point.x][point.y + 1] >= 0) ||
+             (point.x < table[point.z].size() - 1 &&
+              point.y < table[point.z][point.x].size() - 1 &&
+              table[point.z + 1][point.x + 1][point.y + 1] >= 0) ||
+             (point.x > 0 && point.y < table[point.z][point.x].size() - 1 &&
+              table[point.z + 1][point.x - 1][point.y + 1] >= 0) ||
+             (point.x < table[point.z].size() - 1 && point.y > 0 &&
+              table[point.z + 1][point.x + 1][point.y - 1] >= 0));
 }
 
-bool Controller::sideFree(const ThreePoint& point) {
+bool Controller::sideFree(const ThreePoint& point) const {
     bool lfree = true;
     bool rfree = true;
-    
-    if (point.x > 1) 
-        lfree = !(
-            (point.y > 0 && table[point.z][point.x-2][point.y-1] >= 0) ||
-            (table[point.z][point.x-2][point.y] >= 0) ||
-            (point.y < table[point.z][point.x].size() - 1 && table[point.z][point.x-2][point.y+1] >= 0)
-        );
+
+    if (point.x > 1)
+        lfree =
+            !((point.y > 0 && table[point.z][point.x - 2][point.y - 1] >= 0) ||
+              (table[point.z][point.x - 2][point.y] >= 0) ||
+              (point.y < table[point.z][point.x].size() - 1 &&
+               table[point.z][point.x - 2][point.y + 1] >= 0));
 
     if (point.x < table[point.z].size() - 2)
-        rfree = !(
-            (point.y > 0 && table[point.z][point.x+2][point.y-1] >= 0) ||
-            (table[point.z][point.x+2][point.y] >= 0) ||
-            (point.y < table[point.z][point.x].size() - 1 && table[point.z][point.x+2][point.y+1] >= 0)
-        );
+        rfree =
+            !((point.y > 0 && table[point.z][point.x + 2][point.y - 1] >= 0) ||
+              (table[point.z][point.x + 2][point.y] >= 0) ||
+              (point.y < table[point.z][point.x].size() - 1 &&
+               table[point.z][point.x + 2][point.y + 1] >= 0));
 
     return lfree || rfree;
 }
@@ -281,9 +264,11 @@ void Controller::handleClick(const wxPoint& point) {
         auto card = getCardByPosition(pos);
 
         if (pos.z >= 0 && available(pos)) {
-            if (selected != nullptr && sameValues(*card, *selected) && selected != card) {
-                steps.push({CardEntry{drawer.marked, *selected}, CardEntry{pos, *card}});
-                
+            if (selected != nullptr && sameValues(*card, *selected) &&
+                selected != card) {
+                steps.push({CardEntry{drawer.marked, *selected},
+                            CardEntry{pos, *card}});
+
                 *selected = MATCHED;
                 *card = MATCHED;
 
@@ -296,19 +281,18 @@ void Controller::handleClick(const wxPoint& point) {
                 selected = card;
                 drawer.marked = pos;
             }
-        
-            drawer.initScreen(table);
         }
     }
 }
 
-bool Controller::sameValues(CardT a, CardT b) {
-    if (a == b) return true;
-    else if (a >= 38 && b >= 38) 
+bool Controller::sameValues(CardT a, CardT b) const {
+    if (a == b)
+        return true;
+    else if (a >= 38 && b >= 38)
         return true;
     else if (a >= 34 && a <= 37 && b >= 34 && b <= 37)
         return true;
-        
+
     return false;
 }
 
@@ -322,4 +306,8 @@ void Controller::undo() {
         remaining += 2;
         steps.pop();
     }
+}
+
+bool Controller::gameStarted() const {
+    return stopwatch > 0;
 }

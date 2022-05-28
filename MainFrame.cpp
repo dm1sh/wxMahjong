@@ -1,47 +1,53 @@
 #include "MainFrame.h"
 
+#include "AboutDlg.h"
 #include "HelpDlg.h"
 #include "RulesDlg.h"
-#include "AboutDlg.h"
 
 #include "resources/icon.xpm"
 
 MainFrame::MainFrame()
-    : wxFrame(nullptr, wxID_ANY, _("Маджонг (пасьянс)"), wxDefaultPosition, wxSize(800, 600)),
-    dataDirPath(wxStandardPaths::Get().GetUserDataDir())
-{
+    : wxFrame(nullptr, wxID_ANY, _("Маджонг (пасьянс)"), wxDefaultPosition,
+              wxSize(800, 600)),
+      dataDirPath(wxStandardPaths::Get().GetUserDataDir()) {
     SetIcon(logo_icon);
 
     initMenu();
     bindMenu();
 
+    Bind(wxEVT_SHOW, [this](wxShowEvent& _) -> void {
+        if (openLayout())
+            panel->Start(layoutPath, solveable,
+                         [this](const wxSize& size) -> void {
+                             this->SetMinClientSize(size);
+                         });
+    });
+
     CreateStatusBar(2);
 
     panel = new GamePanel(this);
     panel->SetFocus();
-
-    if (openLayout())
-        panel->Start(layoutPath, solveable);
 }
 
 void MainFrame::initMenu() {
-    wxMenu *menuGame = new wxMenu;
+    wxMenu* menuGame = new wxMenu;
     menuGame->Append(IDM_New_Game, _("Начать сначала"));
     menuGame->Append(IDM_Open, _("Открыть карту"));
     menuGame->AppendCheckItem(IDM_Solveable, _("Генерировать решаемую карту"));
-    menuGame->Enable(IDM_Solveable, false); // TODO: finish solveable table generation 
+    menuGame->Enable(IDM_Solveable,
+                     false); // TODO: finish solveable table generation
     menuGame->AppendSeparator();
     menuGame->Append(IDM_Undo, _("Отменить ход"));
     menuGame->Append(IDM_Reshuffle, _("Перемешать поле"));
     menuGame->AppendSeparator();
     menuGame->Append(IDM_Exit, _("Выход"));
 
-    wxMenu *menuHelp = new wxMenu;
+    wxMenu* menuHelp = new wxMenu;
     menuHelp->Append(IDM_Help, _("Инструкция"));
     menuHelp->Append(IDM_Rules, _("Правила игры"));
     menuHelp->Append(IDM_About, _("О программе"));
 
-    wxMenuBar *menuBar = new wxMenuBar;
+    wxMenuBar* menuBar = new wxMenuBar;
     menuBar->Append(menuGame, _("Игра"));
     menuBar->Append(menuHelp, _("Помощь"));
 
@@ -49,57 +55,77 @@ void MainFrame::initMenu() {
 }
 
 void MainFrame::bindMenu() {
-    Bind(wxEVT_MENU, [this](wxCommandEvent& _) -> void {
-        Close();
-    }, IDM_Exit);
+    Bind(
+        wxEVT_MENU, [this](wxCommandEvent& _) -> void { Close(); }, IDM_Exit);
 
-    Bind(wxEVT_MENU, [this](wxCommandEvent& _) -> void {
-        if (openLayout())
-            panel->Start(layoutPath, solveable);
-    }, IDM_Open);
+    Bind(
+        wxEVT_MENU,
+        [this](wxCommandEvent& _) -> void {
+            if (openLayout())
+                panel->Start(layoutPath, solveable,
+                             [this](const wxSize& size) -> void {
+                                 this->SetMinClientSize(size);
+                             });
+        },
+        IDM_Open);
 
-    Bind(wxEVT_MENU, [this](wxCommandEvent& _) -> void {
-        (new HelpDlg(this, -1))->Show();
-    }, IDM_Help);
+    Bind(
+        wxEVT_MENU,
+        [this](wxCommandEvent& _) -> void { (new HelpDlg(this, -1))->Show(); },
+        IDM_Help);
 
-    Bind(wxEVT_MENU, [this](wxCommandEvent& _) -> void {
-        (new AboutDlg(this, -1))->Show();
-    }, IDM_About);
+    Bind(
+        wxEVT_MENU,
+        [this](wxCommandEvent& _) -> void { (new AboutDlg(this, -1))->Show(); },
+        IDM_About);
 
-    Bind(wxEVT_MENU, [this](wxCommandEvent& _) -> void {
-        (new RulesDlg(this, -1))->Show();
-    }, IDM_Rules);
+    Bind(
+        wxEVT_MENU,
+        [this](wxCommandEvent& _) -> void { (new RulesDlg(this, -1))->Show(); },
+        IDM_Rules);
 
-    Bind(wxEVT_MENU, [this](wxCommandEvent& _) -> void {
-        if (!layoutPath.IsEmpty() || openLayout()) {
-            panel->Start(layoutPath, solveable);
-            Refresh();
-        }
-    }, IDM_New_Game);
+    Bind(
+        wxEVT_MENU,
+        [this](wxCommandEvent& _) -> void {
+            if (!layoutPath.IsEmpty() || openLayout()) {
+                panel->Start(layoutPath, solveable,
+                             [this](const wxSize& size) -> void {
+                                 this->SetMinClientSize(size);
+                             });
+            }
+        },
+        IDM_New_Game);
 
-    Bind(wxEVT_MENU, [this](wxCommandEvent& evt) -> void {
-        solveable = evt.IsChecked();
-    }, IDM_Solveable);
+    Bind(
+        wxEVT_MENU,
+        [this](wxCommandEvent& evt) -> void { solveable = evt.IsChecked(); },
+        IDM_Solveable);
 
-    Bind(wxEVT_MENU, [this](wxCommandEvent& _) -> void {
-        panel->undo();
-    }, IDM_Undo);
+    Bind(
+        wxEVT_MENU, [this](wxCommandEvent& _) -> void { panel->undo(); },
+        IDM_Undo);
 
-    Bind(wxEVT_MENU, [this](wxCommandEvent& _) -> void {
-        panel->reshuffle(solveable);
-    }, IDM_Reshuffle);
+    Bind(
+        wxEVT_MENU,
+        [this](wxCommandEvent& _) -> void { panel->reshuffle(solveable); },
+        IDM_Reshuffle);
 }
 
 /**
- * Shows a file opening dialog asking for .smlf file if succed, sets its path to layoutPath
+ * Shows a file opening dialog asking for .smlf file if succed, sets its path to
+ * layoutPath
  * @return true if user have chosen a file, false if cancelled
  */
 bool MainFrame::openLayout() {
-    wxFileDialog openFileDlg(this, _("Открыть карту"), dataDirPath + wxFileName::GetPathSeparator() + _("layouts"), _("Turtle.smlf"), _("Файлы Mahjong карт (*.smlf)|*.smlf"), wxFD_OPEN | wxFD_FILE_MUST_EXIST);
+    wxFileDialog openFileDlg(
+        this, _("Открыть карту"),
+        dataDirPath + wxFileName::GetPathSeparator() + _("layouts"),
+        _("Turtle.smlf"), _("Файлы Mahjong карт (*.smlf)|*.smlf"),
+        wxFD_OPEN | wxFD_FILE_MUST_EXIST);
 
     if (openFileDlg.ShowModal() == wxID_CANCEL)
         return false;
 
-    layoutPath =  openFileDlg.GetPath();
+    layoutPath = openFileDlg.GetPath();
     return true;
 }

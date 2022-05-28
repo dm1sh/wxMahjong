@@ -4,39 +4,82 @@
 
 #include "utils.h"
 
-GamePanel::GamePanel(wxFrame* parent) : wxPanel(parent), controller(drawer) {
+// clang-format off
+wxBEGIN_EVENT_TABLE(GamePanel, wxPanel)
+    EVT_PAINT(GamePanel::OnPaint)
+    EVT_SIZE(GamePanel::OnResize)
+    EVT_TIMER(TIMER_ID, GamePanel::OnTimer)
+    EVT_LEFT_DOWN(GamePanel::OnClick)
+wxEND_EVENT_TABLE();
+// clang-format on
+
+GamePanel::GamePanel(wxFrame* parent)
+    : wxPanel(parent), controller(drawer),
+      sb(((wxFrame*)this->GetParent())->GetStatusBar()), timer(this, TIMER_ID) {
     SetBackgroundStyle(wxBG_STYLE_PAINT);
-
-    Bind(wxEVT_PAINT, &GamePanel::OnPaint, this);
-    Bind(wxEVT_SIZE, [this](wxSizeEvent& evt) -> void {
-        this->controller.resize(evt.GetSize());
-    });
-
-    timer = new wxTimer(this, 1);
-    Bind(wxEVT_TIMER, &GamePanel::OnTimer, this, timer->GetId());
-
-    Bind(wxEVT_LEFT_DOWN, &GamePanel::OnClick, this);
 }
 
-void GamePanel::Start(const wxString& path, bool solveable) {
+void GamePanel::Start(const wxString& path, bool solveable,
+                      std::function<void(const wxSize& size)> setMinSize) {
+    wxLogDebug(_("Started game"));
+
     controller.stopwatch = 0;
     controller.loadLayout(path);
     controller.fill(solveable);
 
-    timer->Start(1000, wxTIMER_CONTINUOUS);
-    
-    if (sb == nullptr)
-        sb = ((wxFrame*)this->GetParent())->GetStatusBar();
+    setMinSize(drawer.composeMinSize(controller.gridSize));
+
+    timer.Start(1000, wxTIMER_CONTINUOUS);
+
     sb->SetStatusText(LTimeToStr(controller.stopwatch), 0);
     sb->SetStatusText(PRemaining(controller.remaining), 1);
 
-    drawer.initScreen(controller.getTable());
+    bool redrawn =
+        drawer.resizeBoard(controller.getTable(), controller.gridSize);
+    if (!redrawn)
+        drawer.composeBoard(controller.getTable(), controller.gridSize);
+
+    Refresh();
+}
+
+void GamePanel::undo() {
+    controller.undo();
+
+    drawer.composeBoard(controller.getTable(), controller.gridSize);
+
+    Refresh();
+}
+
+void GamePanel::reshuffle(bool solveable) {
+    controller.free_table();
+    controller.fill(solveable);
+
+    drawer.composeBoard(controller.getTable(), controller.gridSize);
+
+    Refresh();
 }
 
 void GamePanel::OnPaint(wxPaintEvent& _) {
     wxAutoBufferedPaintDC dc(this);
 
+    wxLogDebug(_("OnPaint"));
+
     drawer.drawTable(dc);
+}
+
+void GamePanel::OnResize(wxSizeEvent& _) {
+    const wxSize& resolution = GetClientSize();
+
+    wxLogDebug(wxString::Format("OnResize %i %i", resolution.x, resolution.y));
+
+    if (isPositive(resolution)) {
+        drawer.resizeBg(resolution);
+
+        if (controller.gameStarted())
+            drawer.resizeBoard(controller.getTable(), controller.gridSize);
+    }
+
+    Refresh();
 }
 
 void GamePanel::OnTimer(wxTimerEvent& _) {
@@ -45,24 +88,12 @@ void GamePanel::OnTimer(wxTimerEvent& _) {
 }
 
 void GamePanel::OnClick(wxMouseEvent& _) {
-    controller.handleClick(ScreenToClient(wxGetMousePosition()));
-    sb->SetStatusText(PRemaining(controller.remaining), 1);
+    if (controller.gameStarted()) {
+        controller.handleClick(ScreenToClient(wxGetMousePosition()));
+        sb->SetStatusText(PRemaining(controller.remaining), 1);
 
-    Refresh();
-}
+        drawer.composeBoard(controller.getTable(), controller.gridSize);
 
-void GamePanel::undo() {
-    controller.undo();
-
-    drawer.initScreen(controller.getTable());
-
-    Refresh();
-}
-
-void GamePanel::reshuffle(bool solveable) {
-    controller.free_table();
-    controller.fill(solveable);
-    drawer.initScreen(controller.getTable());
-
-    Refresh();
+        Refresh();
+    }
 }

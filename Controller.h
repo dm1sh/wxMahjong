@@ -16,8 +16,6 @@ public:
 
     int stopwatch = -1;
 
-    void resize(const wxSize& tableSize);
-
     void loadLayout(const wxString& path);
 
     void handleClick(const wxPoint& point);
@@ -31,6 +29,11 @@ public:
     uint8_t remaining;
 
     void undo();
+
+    bool gameStarted() const;
+
+    Dimensions gridSize;
+
 private:
     Drawer& drawer;
     XmlLayout layout;
@@ -40,21 +43,22 @@ private:
     CardT* selected = nullptr;
 
     void fillSolveableTable();
-    void fillRandom();
+    int emplace_rand(int id, std::list<ThreePoint> positions, int past_pos,
+                     std::list<ThreePoint>::iterator past_ptr);
 
-    int emplace_rand(int id, std::list<ThreePoint> positions, int past_pos, std::list<ThreePoint>::iterator past_ptr);
+    void fillRandom();
 
     CardT genRandId();
 
     CardT* getCardByPosition(ThreePoint& point);
 
-    bool available(const ThreePoint& point);
-    bool upFree(const ThreePoint& point);
-    bool sideFree(const ThreePoint& point);
+    bool available(const ThreePoint& point) const;
+    bool upFree(const ThreePoint& point) const;
+    bool sideFree(const ThreePoint& point) const;
 
-    bool sameValues(CardT a, CardT b);
+    bool sameValues(CardT a, CardT b) const;
 
-    std::array<uint8_t, TILE_IMAGES_N>cardsCounter;
+    std::array<uint8_t, TILE_IMAGES_N> cardsCounter;
 
     std::stack<std::array<CardEntry, 2>> steps;
 };
