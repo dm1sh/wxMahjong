@@ -64,6 +64,8 @@ void Drawer::composeBoard(const TLVec& layout, const Dimensions& gridSize) {
                     drawTile(dc, c, fromGrid(x, y), z);
             }
 
+    dc.SelectObject(wxNullBitmap);
+
     wxMask* mask = new wxMask(boardBitmap, wxColor(0x00, 0x00, 0x00));
     boardBitmap.SetMask(mask);
 }
@@ -131,25 +133,23 @@ bool Drawer::resizeBoard(const TLVec& layout, const Dimensions& gridSize) {
 
     wxLogDebug(wxString::Format("Resize board: %i", gridPoint));
 
-    if (gridPoint >= MIN_GRID_POINT) {
-        if (gridPoint != prevGridPoint) {
-            tablePixelRect.SetSize({gridPoint * TILE_WIDTH * gridSize.x,
-                                    gridPoint * TILE_HEIGHT * gridSize.y});
+    if (gridPoint != prevGridPoint) {
+        tablePixelRect.SetSize({gridPoint * TILE_WIDTH * gridSize.x,
+                                gridPoint * TILE_HEIGHT * gridSize.y});
 
-            tilePixelSize.Set(gridPoint * TILE_WIDTH, gridPoint * TILE_HEIGHT);
-        }
-
-        tablePixelRect.SetPosition(
-            {(resolution.x - tablePixelRect.width) / 2,
-             (resolution.y - tablePixelRect.height) / 2});
-
-        if (gridPoint != prevGridPoint) {
-            composeBoard(layout, gridSize);
-            res = true;
-        }
-
-        prevGridPoint = gridPoint;
+        tilePixelSize.Set(gridPoint * TILE_WIDTH, gridPoint * TILE_HEIGHT);
     }
+
+    tablePixelRect.SetPosition(
+        {(resolution.x - tablePixelRect.width) / 2,
+            (resolution.y - tablePixelRect.height) / 2});
+
+    if (gridPoint != prevGridPoint) {
+        composeBoard(layout, gridSize);
+        res = true;
+    }
+
+    prevGridPoint = gridPoint;
 
     return res;
 }
