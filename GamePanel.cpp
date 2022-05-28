@@ -2,6 +2,7 @@
 
 #include <wx/dcbuffer.h>
 
+#include "events.h"
 #include "utils.h"
 
 // clang-format off
@@ -82,9 +83,20 @@ void GamePanel::OnResize(wxSizeEvent& _) {
     Refresh();
 }
 
+wxDEFINE_EVENT(END_EVT, wxCommandEvent);
+
 void GamePanel::OnTimer(wxTimerEvent& _) {
     controller.stopwatch += 1;
     sb->SetStatusText(LTimeToStr(controller.stopwatch), 0);
+
+    if (controller.remaining == 0) {
+        wxCommandEvent event(END_EVT);
+        event.SetString(LTimeToStr(controller.stopwatch));
+        wxPostEvent(GetParent(), event);
+
+        timer.Stop();
+        controller.stopwatch = 0;
+    }
 }
 
 void GamePanel::OnClick(wxMouseEvent& _) {
@@ -93,6 +105,8 @@ void GamePanel::OnClick(wxMouseEvent& _) {
         sb->SetStatusText(PRemaining(controller.remaining), 1);
 
         drawer.composeBoard(controller.getTable(), controller.gridSize);
+
+        wxLogDebug(wxString::Format(_("Remaining %i"), controller.remaining));
 
         Refresh();
     }

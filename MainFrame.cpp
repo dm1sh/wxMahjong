@@ -4,6 +4,8 @@
 #include "HelpDlg.h"
 #include "RulesDlg.h"
 
+#include "events.h"
+
 #include "resources/icon.xpm"
 
 MainFrame::MainFrame()
@@ -21,6 +23,19 @@ MainFrame::MainFrame()
                          [this](const wxSize& size) -> void {
                              this->SetMinClientSize(size);
                          });
+    });
+
+    Bind(END_EVT, [this](wxCommandEvent& evt) -> void {
+        wxMessageDialog dlg(this, _("Хотите сыграть снова?"),
+                            _("Игра окончена"), wxYES_NO);
+        dlg.SetExtendedMessage(_("Поздравляем, вы закончили игру за ") +
+                               evt.GetString());
+        if (dlg.ShowModal() == wxID_YES) {
+            panel->Start(layoutPath, solveable,
+                         [this](const wxSize& size) -> void {
+                             this->SetMinClientSize(size);
+                         });
+        }
     });
 
     CreateStatusBar(2);
@@ -71,17 +86,23 @@ void MainFrame::bindMenu() {
 
     Bind(
         wxEVT_MENU,
-        [this](wxCommandEvent& _) -> void { (new HelpDlg(this, -1))->Show(); },
+        [this](wxCommandEvent& _) -> void {
+            (new HelpDlg(this, wxID_ANY))->Show();
+        },
         IDM_Help);
 
     Bind(
         wxEVT_MENU,
-        [this](wxCommandEvent& _) -> void { (new AboutDlg(this, -1))->Show(); },
+        [this](wxCommandEvent& _) -> void {
+            (new AboutDlg(this, wxID_ANY))->Show();
+        },
         IDM_About);
 
     Bind(
         wxEVT_MENU,
-        [this](wxCommandEvent& _) -> void { (new RulesDlg(this, -1))->Show(); },
+        [this](wxCommandEvent& _) -> void {
+            (new RulesDlg(this, wxID_ANY))->Show();
+        },
         IDM_Rules);
 
     Bind(
