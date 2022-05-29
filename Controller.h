@@ -2,7 +2,7 @@
 #define CONTROLLER_H
 
 #include <array>
-#include <list>
+#include <set>
 #include <stack>
 
 #include "wxw.h"
@@ -43,8 +43,11 @@ private:
     CardT* selected = nullptr;
 
     void fillSolveableTable();
-    int emplace_rand(int id, std::list<ThreePoint> positions, int past_pos,
-                     std::list<ThreePoint>::iterator past_ptr);
+    wxPoint getRandLowest();
+    void emplace_rand(int id, std::set<ThreePoint>& positions,
+                      std::set<ThreePoint>::iterator& next_ptr, bool canBeUp);
+    bool wouldBeUpFree(const ThreePoint& prev, const ThreePoint& next);
+    void push_available(std::set<ThreePoint>& positions, const ThreePoint& pos);
 
     void fillRandom();
 

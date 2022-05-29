@@ -26,8 +26,18 @@ public:
 
 class ThreePoint {
 public:
-    ThreePoint(int _z, int _x, int _y) : x(_x), y(_y), z(_z){};
+    constexpr ThreePoint(int _z, int _x, int _y) : x(_x), y(_y), z(_z){};
+    ThreePoint(const wxPoint& a) : x(a.x), y(a.y), z(0){};
     ThreePoint() : x(0), y(0), z(0){};
+
+    bool operator<(const ThreePoint& b) const {
+        return z*144*144+x*144+y < b.z*144*144+b.x*144+b.y;
+    }
+
+    bool operator==(const ThreePoint& b) {
+        return z == b.z && x == b.x && y == b.y;
+    }
+
     int x;
     int y;
     int z;

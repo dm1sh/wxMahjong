@@ -49,8 +49,6 @@ void MainFrame::initMenu() {
     menuGame->Append(IDM_New_Game, _("Начать сначала"));
     menuGame->Append(IDM_Open, _("Открыть карту"));
     menuGame->AppendCheckItem(IDM_Solveable, _("Генерировать решаемую карту"));
-    menuGame->Enable(IDM_Solveable,
-                     false); // TODO: finish solveable table generation
     menuGame->AppendSeparator();
     menuGame->Append(IDM_Undo, _("Отменить ход"));
     menuGame->Append(IDM_Reshuffle, _("Перемешать поле"));

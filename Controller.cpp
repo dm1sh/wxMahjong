@@ -35,65 +35,147 @@ void Controller::fill(bool solveable) {
 }
 
 void Controller::fillSolveableTable() {
-    time_t start_time = time(NULL);
+    srand(time(NULL));
 
-    std::list<ThreePoint> positions;
+    auto not_end = remaining;
 
-    int overall = gridSize.z * gridSize.x * gridSize.y;
-    int pos = rand() % overall;
-    int z, x, y;
+    std::set<ThreePoint> positions;
 
-    do {
-        z = pos / (gridSize.x * gridSize.y);
-        x = (pos / gridSize.y) % gridSize.x;
-        y = pos % gridSize.y;
-    } while (table[z][x][y] != FREE);
+    positions.insert(getRandLowest());
 
-    positions.push_back({z, x, y});
+    auto next_ptr = positions.begin();
 
-    int past_pos = 0;
-    auto past_ptr = positions.begin();
-
-    while (!positions.empty()) {
+    while (!positions.empty() || (not_end && !(positions.insert(getRandLowest()), positions.empty()))) {
         int id = genRandId();
 
         if (id < 34) {
-            past_pos = emplace_rand(id, positions, past_pos, past_ptr);
-            past_pos = emplace_rand(id, positions, past_pos, past_ptr);
+            emplace_rand(id, positions, next_ptr, true);
+            emplace_rand(id, positions, next_ptr, false);
 
             cardsCounter[id]--;
-        } else
-            emplace_rand(id, positions, past_pos, past_ptr);
+            not_end -= 2;
+        } else {
+            emplace_rand(id, positions, next_ptr, true);
+            not_end--;
+        }
     }
-
-    wxLogInfo(
-        wxString::Format("Filling took %i seconds", start_time - time(NULL)));
 }
 
-int Controller::emplace_rand(int id, std::list<ThreePoint> positions,
-                             int past_pos,
-                             std::list<ThreePoint>::iterator past_ptr) {
-    int d = rand() % positions.size() - past_pos;
+wxPoint Controller::getRandLowest() {
+    int overall = gridSize.x * gridSize.y;
+    int x, y;
 
-    if (d > 0)
-        for (int i = 0; i < d; i++)
-            past_ptr++;
-    else
-        for (int i = 0; i > d; i--)
-            past_ptr--;
+    do {
+        int pos = rand() % overall;
+        x = (pos / gridSize.y) % gridSize.x;
+        y = pos % gridSize.y;
+    } while (table[0][x][y] != FREE);
 
-    past_pos += d;
+    return {x, y};
+}
 
-    table[past_ptr->z][past_ptr->x][past_ptr->y] = id;
+#include <wx/file.h>
 
-    // if ()
-    // positions.push_back({})
+void print_list(const std::set<ThreePoint>& positions) {
+    wxFile f("tmp.txt", wxFile::write_append);
+    
+    for (const auto& el : positions)
+        f.Write(itowxS(el.z) + " " + itowxS(el.x) + " " + itowxS(el.y) + "\n");
+    
+    f.Write("_ size: " + itowxS(positions.size()) + "\n");
+}
 
-    /**
-     * TODO: random move and positions adding
-     */
+void Controller::emplace_rand(int id, std::set<ThreePoint>& positions,
+                              std::set<ThreePoint>::iterator& next_ptr,
+                              bool canBeUp) {
+    print_list(positions);
 
-    return 0;
+    table[next_ptr->z][next_ptr->x][next_ptr->y] = id;
+
+    push_available(positions, *next_ptr);
+
+    auto prev_ptr = next_ptr;
+    auto prev = *next_ptr;
+
+    do {
+        next_ptr++;
+        
+        if (next_ptr == positions.end())
+            next_ptr = positions.begin();
+    } while (!canBeUp && !wouldBeUpFree(prev, *next_ptr));
+
+    positions.erase(prev_ptr);
+}
+
+bool Controller::wouldBeUpFree(const ThreePoint& prev, const ThreePoint& next) {
+    table[next.z][next.x][next.y] = 1;
+
+    bool res = upFree(prev);
+
+    table[next.z][next.x][next.y] = FREE;
+
+    return res;
+}
+
+void Controller::push_available(std::set<ThreePoint>& positions,
+                                const ThreePoint& pos) {
+    int z = pos.z, x = pos.x, y = pos.y;
+
+    if (x >= 2 && table[z][x-2][y] == FREE) // left
+        positions.emplace(z, x-2, y);
+    if (x + 2 < gridSize.x && table[z][x+2][y] == FREE) // right
+        positions.emplace(z, x+2, y);
+
+    if (y >= 1 && (y < 2 || table[z][x][y-2] != FREE)) { // half bottom
+        if (x >= 2 && table[z][x-2][y-1] == FREE) // left
+            positions.emplace(z, x-2, y-1);
+        if (x + 2 < gridSize.x && table[z][x+2][y-1] == FREE) // right
+            positions.emplace(z, x+2, y-1);
+    }
+
+    if (y + 1 < gridSize.y && (y + 2 >= gridSize.y || table[z][x][y+2] != FREE)) { // half bottom
+        if (x >= 2 && table[z][x-2][y+1] == FREE) // left
+            positions.emplace(z, x-2, y+1);
+        if (x + 2 < gridSize.x && table[z][x+2][y+1] == FREE) // right
+            positions.emplace(z, x+2, y+1);
+    }
+
+    if (y >= 2 && table[z][x][y-2] == FREE) // up
+        positions.emplace(z, x, y-2);
+    if (y + 2 < gridSize.y && table[z][x][y+2] == FREE) // bottom
+        positions.emplace(z, x, y+2);
+
+    if (z + 1 < gridSize.z) { // higher
+        if (table[z+1][x][y] == FREE) // straight
+            positions.emplace(z+1, x, y);
+
+        if (y >= 1 && (y < 2 || table[z][x][y-2] != FREE) && table[z+1][x][y-1] == FREE) // half top
+            positions.emplace(z+1, x, y-1);
+        if (y + 1 < gridSize.y && (y + 2 >= gridSize.y || table[z][x][y+2] != FREE) && table[z+1][x][y+1] == FREE) // half bottom
+            positions.emplace(z+1, x, y+1);
+
+        if (x >= 1 && (x < 2 || table[z][x-2][y] != FREE)) {// half left
+            if (table[z+1][x-1][y] == FREE) // straight
+                positions.emplace(z+1, x-1, y);
+            
+            if (y >= 1 && (x < 2 || table[z][x-2][y-1] != FREE) && table[z+1][x-1][y-1] == FREE) // half top
+                positions.emplace(z+1, x-1, y-1);
+
+            if (y + 1 < gridSize.y && (x < 2 || table[z][x-2][y+1] != FREE) && table[z+1][x-1][y+1] == FREE) //half bottom
+                positions.emplace(z+1, x-1, y+1);
+        }
+
+        if (x + 1 < gridSize.x && (x + 2 >= gridSize.x || table[z][x+2][y] != FREE)) { // half right
+            if (table[z+1][x+1][y] == FREE) // straight
+                positions.emplace(z+1, x+1, y);
+
+            if (y >= 1 && (x + 2 >= gridSize.x || table[z][x+2][y-1] != FREE) && table[z+1][x+1][y-1] == FREE) // half top
+                positions.emplace(z+1, x+1, y-1);
+
+            if (y + 1 < gridSize.y && (x + 2 >= gridSize.x || table[z][x+2][y+1] != FREE) && table[z+1][x+1][y+1] == FREE) //half bottom
+                positions.emplace(z+1, x+1, y+1);
+        }
+    }
 }
 
 void Controller::free_table() {
@@ -115,7 +197,7 @@ void Controller::free_table() {
 void Controller::fillRandom() {
     srand(time(NULL));
 
-    wxLogDebug(wxString::Format("%i", remaining));
+    wxLogDebug(itowxS(remaining));
 
     auto not_end = remaining;
 
@@ -261,7 +343,7 @@ void Controller::handleClick(const wxPoint& point) {
     ThreePoint pos = {-1, posPlain.x, posPlain.y};
 
     if (pos.x > -1) {
-        auto card = getCardByPosition(pos);
+        CardT* card = getCardByPosition(pos);
 
         if (pos.z >= 0 && available(pos)) {
             if (selected != nullptr && sameValues(*card, *selected) &&
