@@ -20,13 +20,13 @@ GamePanel::GamePanel(wxFrame* parent)
     SetBackgroundStyle(wxBG_STYLE_PAINT);
 }
 
-void GamePanel::Start(const wxString& path, bool solveable,
+void GamePanel::Start(const wxString& path, bool solvable,
                       std::function<void(const wxSize& size)> setMinSize) {
     wxLogDebug(_("Started game"));
 
     controller.stopwatch = 0;
     controller.loadLayout(path);
-    controller.fill(solveable);
+    controller.fill(solvable);
 
     setMinSize(drawer.composeMinSize(controller.gridSize));
 
@@ -51,9 +51,9 @@ void GamePanel::undo() {
     Refresh();
 }
 
-void GamePanel::reshuffle(bool solveable) {
+void GamePanel::reshuffle(bool solvable) {
     controller.free_table();
-    controller.fill(solveable);
+    controller.fill(solvable);
 
     drawer.composeBoard(controller.getTable(), controller.gridSize);
 
