@@ -45,7 +45,9 @@ void Controller::fillSolveableTable() {
 
     auto next_ptr = positions.begin();
 
-    while (!positions.empty() || (not_end && !(positions.insert(getRandLowest()), positions.empty()))) {
+    while (
+        !positions.empty() ||
+        (not_end && !(positions.insert(getRandLowest()), positions.empty()))) {
         int id = genRandId();
 
         if (id < 34) {
@@ -74,21 +76,27 @@ wxPoint Controller::getRandLowest() {
     return {x, y};
 }
 
+#ifdef WXDEBUG
+
 #include <wx/file.h>
 
 void print_list(const std::set<ThreePoint>& positions) {
     wxFile f("tmp.txt", wxFile::write_append);
-    
+
     for (const auto& el : positions)
         f.Write(itowxS(el.z) + " " + itowxS(el.x) + " " + itowxS(el.y) + "\n");
-    
+
     f.Write("_ size: " + itowxS(positions.size()) + "\n");
 }
+
+#endif
 
 void Controller::emplace_rand(int id, std::set<ThreePoint>& positions,
                               std::set<ThreePoint>::iterator& next_ptr,
                               bool canBeUp) {
+#ifdef WXDEBUG
     print_list(positions);
+#endif
 
     table[next_ptr->z][next_ptr->x][next_ptr->y] = id;
 
@@ -99,7 +107,7 @@ void Controller::emplace_rand(int id, std::set<ThreePoint>& positions,
 
     do {
         next_ptr++;
-        
+
         if (next_ptr == positions.end())
             next_ptr = positions.begin();
     } while (!canBeUp && !wouldBeUpFree(prev, *next_ptr));
@@ -121,6 +129,7 @@ void Controller::push_available(std::set<ThreePoint>& positions,
                                 const ThreePoint& pos) {
     int z = pos.z, x = pos.x, y = pos.y;
 
+    // clang-format off
     if (x >= 2 && table[z][x-2][y] == FREE) // left
         positions.emplace(z, x-2, y);
     if (x + 2 < gridSize.x && table[z][x+2][y] == FREE) // right
@@ -176,6 +185,7 @@ void Controller::push_available(std::set<ThreePoint>& positions,
                 positions.emplace(z+1, x+1, y+1);
         }
     }
+    // clang-format on
 }
 
 void Controller::free_table() {

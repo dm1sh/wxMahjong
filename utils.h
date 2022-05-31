@@ -31,7 +31,7 @@ public:
     ThreePoint() : x(0), y(0), z(0){};
 
     bool operator<(const ThreePoint& b) const {
-        return z*144*144+x*144+y < b.z*144*144+b.x*144+b.y;
+        return z * 144 * 144 + x * 144 + y < b.z * 144 * 144 + b.x * 144 + b.y;
     }
 
     bool operator==(const ThreePoint& b) {

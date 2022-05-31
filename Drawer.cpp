@@ -140,9 +140,8 @@ bool Drawer::resizeBoard(const TLVec& layout, const Dimensions& gridSize) {
         tilePixelSize.Set(gridPoint * TILE_WIDTH, gridPoint * TILE_HEIGHT);
     }
 
-    tablePixelRect.SetPosition(
-        {(resolution.x - tablePixelRect.width) / 2,
-            (resolution.y - tablePixelRect.height) / 2});
+    tablePixelRect.SetPosition({(resolution.x - tablePixelRect.width) / 2,
+                                (resolution.y - tablePixelRect.height) / 2});
 
     if (gridPoint != prevGridPoint) {
         composeBoard(layout, gridSize);
