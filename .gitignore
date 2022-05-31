@@ -1,3 +1,4 @@
 build/
 class_diagram/
 diagrams/
+.vscode/*.log
