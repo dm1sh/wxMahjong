@@ -9,7 +9,7 @@
             "request": "launch",
             "name": "Debug",
             "program": "${workspaceFolder}/build/wxMahjong",
-            "args": [],
+            "args": ["./resources/layouts/Flower.smlf"],
             "cwd": "${workspaceFolder}",
             "env": {
                 "LD_LIBRARY_PATH": "$LD_LIBRARY_PATH:/usr/local/lib"

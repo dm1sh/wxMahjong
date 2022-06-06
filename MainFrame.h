@@ -12,6 +12,8 @@ class MainFrame : public wxFrame {
 public:
     MainFrame();
 
+    wxString layoutPath;
+
 private:
     void initMenu();
     void bindMenu();
@@ -21,7 +23,6 @@ private:
     bool openLayout();
 
     const wxString dataDirPath;
-    wxString layoutPath;
 
     bool solveable = false; // determites wether to generate solveable or
                             // completely random map

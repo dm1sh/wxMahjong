@@ -18,7 +18,7 @@ MainFrame::MainFrame()
     bindMenu();
 
     Bind(wxEVT_SHOW, [this](wxShowEvent& _) -> void {
-        if (openLayout())
+        if (!layoutPath.IsEmpty() || openLayout())
             panel->Start(layoutPath, solveable,
                          [this](const wxSize& size) -> void {
                              this->SetMinClientSize(size);
@@ -41,7 +41,6 @@ MainFrame::MainFrame()
     CreateStatusBar(2);
 
     panel = new GamePanel(this);
-    panel->SetFocus();
 }
 
 void MainFrame::initMenu() {
