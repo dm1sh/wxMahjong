@@ -39,7 +39,7 @@ MainFrame::MainFrame()
 
 void MainFrame::initMenu() {
     wxMenu* menuGame = new wxMenu; // Создаём подменю
-    menuGame->Append(IDM_New_Game, _("Начать сначала")); // Создаем пункт меню с id обработчика IDM_New_Game, далее аналогично
+    menuGame->Append(IDM_New_Game, _("Начать сначала\tCTRL+N")); // Создаем пункт меню с id обработчика IDM_New_Game, далее аналогично
     menuGame->Append(IDM_Open, _("Открыть карту"));
     menuGame->AppendCheckItem(IDM_Solveable, _("Генерировать решаемую карту"));
     menuGame->AppendSeparator(); // Добавляем горизонтальный разделитель в меню

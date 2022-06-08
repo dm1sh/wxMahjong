@@ -84,30 +84,30 @@ void Drawer::drawTile(wxDC& dc, int8_t index, const wxPoint& position,
 
     dc.SetBrush(back);
 
-    dc.DrawRoundedRectangle(position.x + (tilePixelSize.GetWidth() / 10 + 3) -
-                                (tilePixelSize.GetWidth() / 10 + 3) * zIndex,
-                            position.y + (tilePixelSize.GetHeight() / 10 + 3) -
-                                (tilePixelSize.GetHeight() / 10 + 3) * zIndex,
+    dc.DrawRoundedRectangle(position.x + (tilePixelSize.GetWidth() / TILE_WIDTH * TILE_PADDING_SCALE) -
+                                (tilePixelSize.GetWidth() / TILE_WIDTH * TILE_PADDING_SCALE) * zIndex,
+                            position.y + (tilePixelSize.GetHeight() / TILE_WIDTH * TILE_PADDING_SCALE) -
+                                (tilePixelSize.GetHeight() / TILE_WIDTH * TILE_PADDING_SCALE) * zIndex,
                             tilePixelSize.GetWidth() * 2,
-                            tilePixelSize.GetHeight() * 2, 10);
+                            tilePixelSize.GetHeight() * 2, (tilePixelSize.GetHeight() / TILE_HEIGHT * TILE_PADDING_SCALE));
 
     dc.SetBrush(front);
 
     dc.DrawRoundedRectangle(
-        position.x - (tilePixelSize.GetWidth() / 10 + 3) * zIndex,
-        position.y - (tilePixelSize.GetHeight() / 10 + 3) * zIndex,
-        tilePixelSize.GetWidth() * 2, tilePixelSize.GetHeight() * 2, 10);
+        position.x - (tilePixelSize.GetWidth() / TILE_WIDTH * TILE_PADDING_SCALE) * zIndex,
+        position.y - (tilePixelSize.GetHeight() / TILE_WIDTH * TILE_PADDING_SCALE) * zIndex,
+        tilePixelSize.GetWidth() * 2, tilePixelSize.GetHeight() * 2, (tilePixelSize.GetHeight() / TILE_HEIGHT * TILE_PADDING_SCALE));
 
     dc.SetBrush(_bgColor);
 
     if (tileImages[index].IsOk()) {
         wxPoint pos;
-        pos.x = position.x + 10 - (tilePixelSize.GetWidth() / 10 + 3) * zIndex;
-        pos.y = position.y + 10 - (tilePixelSize.GetHeight() / 10 + 3) * zIndex;
+        pos.x = position.x + (tilePixelSize.GetWidth() / TILE_WIDTH * TILE_PADDING_SCALE) - (tilePixelSize.GetWidth() / TILE_WIDTH * TILE_PADDING_SCALE) * zIndex;
+        pos.y = position.y + (tilePixelSize.GetHeight() / TILE_HEIGHT * TILE_PADDING_SCALE) - (tilePixelSize.GetHeight() / TILE_WIDTH * TILE_PADDING_SCALE) * zIndex;
 
-        if (tileImages[index].GetWidth() != tilePixelSize.x * 2)
-            dc.DrawBitmap(tileImages[index].Scale(tilePixelSize.x * 2 - 20,
-                                                  tilePixelSize.y * 2 - 20),
+        if (tileImages[index].GetWidth() != tilePixelSize.x * 2 - tilePixelSize.GetWidth() / TILE_WIDTH * TILE_PADDING_SCALE * 2)
+            dc.DrawBitmap(tileImages[index].Scale(tilePixelSize.x * 2 - tilePixelSize.GetWidth() / TILE_WIDTH * TILE_PADDING_SCALE * 2,
+                                                  tilePixelSize.y * 2 - tilePixelSize.GetHeight() / TILE_HEIGHT * TILE_PADDING_SCALE * 2),
                           pos);
         else
             dc.DrawBitmap(tileImages[index], pos);
@@ -125,25 +125,37 @@ void Drawer::resizeBg(const wxSize& resolution) {
  * Resizes tile and whole board bitmap size to the resolution, set in this
  * instance
  */
-bool Drawer::resizeBoard(const TLVec& layout, const Dimensions& gridSize) {
+bool Drawer::resizeBoard(const TLVec& layout, const Dimensions& gridSize, bool force) {
     bool res = false;
 
-    const int gridPoint = mmin(resolution.x / (gridSize.x * TILE_WIDTH),
-                               resolution.y / (gridSize.y * TILE_HEIGHT));
+    const int gridPoint = mmin(
+        resolution.x / (gridSize.x * TILE_WIDTH + gridSize.z * TILE_PADDING_SCALE),
+        resolution.y * TILE_WIDTH /
+            (gridSize.y * TILE_HEIGHT * TILE_WIDTH + TILE_HEIGHT * gridSize.z * TILE_PADDING_SCALE));
 
     wxLogDebug(wxString::Format("Resize board: %i", gridPoint));
 
-    if (gridPoint != prevGridPoint) {
-        tablePixelRect.SetSize({gridPoint * TILE_WIDTH * gridSize.x,
-                                gridPoint * TILE_HEIGHT * gridSize.y});
-
+    if (gridPoint != prevGridPoint || force) {
         tilePixelSize.Set(gridPoint * TILE_WIDTH, gridPoint * TILE_HEIGHT);
+
+        boardPadding.x = (tilePixelSize.x / TILE_WIDTH * TILE_PADDING_SCALE) * (gridSize.z - 1); // Смещение, создаваемое самыми левыми картами на верхних позициях (их может и не быть, но проверять это дорого)
+        boardPadding.y = (tilePixelSize.y / TILE_WIDTH * TILE_PADDING_SCALE) * (gridSize.z - 1); // Смещение, создаваемое самыми верхними (в плоскости xy) картами на верхних позициях (их может и не быть, но проверять это дорого)
+
+        tablePixelRect.SetSize(
+            wxSize((tilePixelSize.x * gridSize.x) + // Размер только плоских карт
+             boardPadding.x + // см. выше
+             (tilePixelSize.x / TILE_WIDTH * TILE_PADDING_SCALE), //  Смещение, даваемое подложками самых правых
+             (tilePixelSize.y * gridSize.y) + // Размер только плоских карт
+             boardPadding.y + // см. выше
+             (tilePixelSize.y / TILE_WIDTH * TILE_PADDING_SCALE) //  Смещение, даваемое подложками самых нижних (в плоскости xy)
+            )
+        );
     }
 
     tablePixelRect.SetPosition({(resolution.x - tablePixelRect.width) / 2,
                                 (resolution.y - tablePixelRect.height) / 2});
 
-    if (gridPoint != prevGridPoint) {
+    if (gridPoint != prevGridPoint || force) {
         composeBoard(layout, gridSize);
         res = true;
     }
@@ -153,8 +165,11 @@ bool Drawer::resizeBoard(const TLVec& layout, const Dimensions& gridSize) {
     return res;
 }
 
-wxPoint Drawer::toGrid(const wxPoint& point) const {
+wxPoint Drawer::toGrid(wxPoint point) const {
     wxPoint out(-1, -1);
+
+    point.x -= boardPadding.x;
+    point.y -= boardPadding.y;
 
     if (point.x >= tablePixelRect.x &&
         point.x <= tablePixelRect.x + tablePixelRect.width &&
@@ -168,18 +183,20 @@ wxPoint Drawer::toGrid(const wxPoint& point) const {
 }
 
 wxPoint Drawer::fromGrid(int x, int y) const {
-    return {x * tilePixelSize.x, y * tilePixelSize.y};
+    return {x * tilePixelSize.x + boardPadding.x, y * tilePixelSize.y + boardPadding.y};
 }
 
 wxPoint Drawer::fromGrid(const wxPoint& point) const {
     return fromGrid(point.x, point.y);
 }
 
-wxSize Drawer::composeMinSize(const wxSize& gridSize) {
+wxSize Drawer::composeMinSize(const Dimensions& gridSize) {
     wxSize ms;
 
-    ms.SetWidth(MIN_GRID_POINT * TILE_WIDTH * gridSize.x);
-    ms.SetHeight(MIN_GRID_POINT * TILE_HEIGHT * gridSize.y);
+    ms.SetWidth(TILE_WIDTH * gridSize.x + gridSize.z * TILE_PADDING_SCALE);
+    ms.SetHeight(TILE_HEIGHT * gridSize.y + gridSize.z * TILE_PADDING_SCALE * TILE_HEIGHT / TILE_WIDTH);
+
+    ms += {1, 1};
 
     wxLogDebug(wxString::Format("MinSize %i %i", ms.x, ms.y));
 

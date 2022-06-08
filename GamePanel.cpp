@@ -39,7 +39,7 @@ void GamePanel::Start(const wxString& path, bool solvable,
     sb->SetStatusText(PRemaining(controller.remaining), 1); // во вторую процент оставшихся камней
 
     bool redrawn = 
-        drawer.resizeBoard(controller.getTable(), controller.gridSize); // Изменяем размер доски
+        drawer.resizeBoard(controller.getTable(), controller.gridSize, true); // Изменяем размер доски
     if (!redrawn) // и если при этом изменился размер камней, 
         drawer.composeBoard(controller.getTable(), controller.gridSize); // перерисовываем доску
 
@@ -80,37 +80,37 @@ void GamePanel::OnResize(wxSizeEvent& _) {
         drawer.resizeBg(resolution); // изменяем размер фона
 
         if (controller.gameStarted()) // если уже начали игру
-            drawer.resizeBoard(controller.getTable(), controller.gridSize); // перерисовываем доску
+            drawer.resizeBoard(controller.getTable(), controller.gridSize, false); // перерисовываем доску
     }
 
     Refresh();
 }
 
-wxDEFINE_EVENT(END_EVT, wxCommandEvent);
+wxDEFINE_EVENT(END_EVT, wxCommandEvent); // Определяем событие об окончании игры
 
 void GamePanel::OnTimer(wxTimerEvent& _) {
-    controller.stopwatch += 1;
-    sb->SetStatusText(LTimeToStr(controller.stopwatch), 0);
+    controller.stopwatch += 1; // Наращиваем счётчик таймера
+    sb->SetStatusText(LTimeToStr(controller.stopwatch), 0); // и выводим его новое значение 
 
-    if (controller.remaining == 0) {
-        wxCommandEvent event(END_EVT);
-        event.SetString(LTimeToStr(controller.stopwatch));
-        wxPostEvent(GetParent(), event);
+    if (controller.remaining == 0) { // если убраны все карты,
+        wxCommandEvent event(END_EVT); // создаём экземпляр события окончания игры
+        event.SetString(LTimeToStr(controller.stopwatch)); // сохраняем в нём время игры
+        wxPostEvent(GetParent(), event); // посылаем событие в родительский класс
 
-        timer.Stop();
-        controller.stopwatch = 0;
+        timer.Stop(); // останавливаем таймер
+        controller.stopwatch = 0; // сбрасываем счётчик таймера
     }
 }
 
 void GamePanel::OnClick(wxMouseEvent& _) {
-    if (controller.gameStarted()) {
-        controller.handleClick(ScreenToClient(wxGetMousePosition()));
-        sb->SetStatusText(PRemaining(controller.remaining), 1);
+    if (controller.gameStarted()) { // Если игра начата,
+        controller.handleClick(ScreenToClient(wxGetMousePosition())); // выполняем обработку клика в контроллере
+        sb->SetStatusText(PRemaining(controller.remaining), 1); // устанавливаем процент оставшихся камней в статусбар
 
-        drawer.composeBoard(controller.getTable(), controller.gridSize);
+        drawer.composeBoard(controller.getTable(), controller.gridSize); // отрисовываем новое поле
 
         wxLogDebug(wxString::Format(_("Remaining %i"), controller.remaining));
 
-        Refresh();
+        Refresh(); // вызываем перерисовку окна
     }
 }

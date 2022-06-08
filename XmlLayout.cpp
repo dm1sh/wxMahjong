@@ -16,9 +16,14 @@ bool XmlLayout::openFile(const wxString& openPath) {
 }
 
 Dimensions XmlLayout::getDimensions() {
-    return {wxAtoi(layoutDoc.GetRoot()->GetAttribute("layers")),
-            wxAtoi(layoutDoc.GetRoot()->GetAttribute("ux")) + 2,
-            wxAtoi(layoutDoc.GetRoot()->GetAttribute("uy")) + 2};
+    auto root = layoutDoc.GetRoot();
+
+    lx = wxAtoi(root->GetAttribute("lx"));
+    ly = wxAtoi(root->GetAttribute("ly"));
+
+    return {wxAtoi(root->GetAttribute("layers")),
+            wxAtoi(root->GetAttribute("ux")) + 2 - lx,
+            wxAtoi(root->GetAttribute("uy")) + 2 - ly};
 }
 
 void XmlLayout::readLayout(TLVec& table) {
@@ -28,8 +33,8 @@ void XmlLayout::readLayout(TLVec& table) {
 
     while (tilePtr) {
         if (tilePtr->GetName().IsSameAs("tile")) {
-            x = wxAtoi(tilePtr->GetAttribute("x"));
-            y = wxAtoi(tilePtr->GetAttribute("y"));
+            x = wxAtoi(tilePtr->GetAttribute("x")) - lx;
+            y = wxAtoi(tilePtr->GetAttribute("y")) - ly;
             l = wxAtoi(tilePtr->GetAttribute("layer")) - 1;
 
             table[l][x][y] = FREE;

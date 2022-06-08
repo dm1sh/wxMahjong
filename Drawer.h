@@ -10,7 +10,7 @@
 
 #define TILE_IMAGES_N 42
 
-#define MIN_GRID_POINT 3
+#define TILE_PADDING_SCALE 1.25
 
 class Drawer {
 public:
@@ -22,13 +22,13 @@ public:
     void composeBoard(const TLVec& layout, const Dimensions& gridSize);
 
     void resizeBg(const wxSize& tableSize);
-    bool resizeBoard(const TLVec& layout, const Dimensions& gridSize);
+    bool resizeBoard(const TLVec& layout, const Dimensions& gridSize, bool force);
 
-    wxPoint toGrid(const wxPoint& point) const;
+    wxPoint toGrid(wxPoint point) const;
     wxPoint fromGrid(int x, int y) const;
     wxPoint fromGrid(const wxPoint& point) const;
 
-    wxSize composeMinSize(const wxSize& gridSize);
+    wxSize composeMinSize(const Dimensions& gridSize);
 
     wxSize tableSize;
 
@@ -46,6 +46,9 @@ private:
 
     wxBitmap bgBitmap;
     wxBitmap boardBitmap;
+
+    wxPoint boardPadding;
+    wxPoint tilePadding;
 
     int prevGridPoint;
 };

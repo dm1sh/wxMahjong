@@ -1,26 +1,27 @@
 #include "Controller.h"
 
-Controller::Controller(Drawer& drawer) : drawer(drawer){};
+#include <exception>
+
+static const std::array<uint8_t, 42> defaultCardsCounter{
+    4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
+    4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 1, 1, 1, 1, 1, 1, 1, 1};
 
 void Controller::loadLayout(const wxString& path) {
-    layout.openFile(path);
+    layout.openFile(path); // открываем файл карты
 
-    gridSize = layout.getDimensions();
+    gridSize = layout.getDimensions(); // получаем размеры карты
 
-    table = TLVec(
+    table = TLVec( // создаём трёхмерный вектор из id карт
         gridSize.z,
         vector<vector<CardT>>(gridSize.x, vector<CardT>(gridSize.y, EMPTY)));
 
-    layout.readLayout(table);
+    layout.readLayout(table); // считываем формат поля из файла
 
-    remaining = layout.getTilesNumber();
+    remaining = layout.getTilesNumber(); // получаем предполагаемое количество камней
 
-    if (remaining == 144) {
-        for (int i = 0; i < 34; i++)
-            cardsCounter[i] = 4;
-        for (int i = 34; i < TILE_IMAGES_N; i++)
-            cardsCounter[i] = 1;
-    }
+    if (remaining == 144) // другие форматы не каноничны, поэтому мы их не поддерживаем
+    // Заполняем массив-счётчик карт с различными id
+        cardsCounter = defaultCardsCounter;
 }
 
 TLVec& Controller::getTable() {
@@ -35,166 +36,236 @@ void Controller::fill(bool solveable) {
 }
 
 void Controller::fillSolveableTable() {
-    srand(time(NULL));
+    srand(time(NULL)); // инициализируем генератор случайных чисел
 
-    auto not_end = remaining;
+    auto not_end = remaining; // сохраняем в отдельную переменную количество оставшихся камней
 
-    std::set<ThreePoint> positions;
+    std::set<ThreePoint> positions; // инициализируем сет для хранения доступных для вставки позиций
 
-    positions.insert(getRandLowest());
+    positions.insert(getRandLowest()); // вставляем случайную начальную позицию
 
-    auto next_ptr = positions.begin();
+    auto next_ptr = positions.begin(); // инициализируем указатель на позицию, куда будет вставляться следующий камень
 
-    while (
-        !positions.empty() ||
-        (not_end && !(positions.insert(getRandLowest()), positions.empty()))) {
+    while (!positions.empty()) {
         int id = genRandId();
 
-        if (id < 34) {
-            emplace_rand(id, positions, next_ptr, false);
-            emplace_rand(id, positions, next_ptr, true);
+        emplace_table(id, *next_ptr, positions); // вставляем id в next_ptr
+        not_end--; // уменьшаем счётчик оставшихся для вставки камней
 
-            cardsCounter[id]--;
-            not_end -= 2;
-        } else {
-            emplace_rand(id, positions, next_ptr, true);
-            not_end--;
-        }
+        next_rand(positions, next_ptr, false, not_end); // Находим случайную новую позицию так, чтобы она не накрывала предыдущую
+
+        if (id < 34) // если id парный
+            cardsCounter[id]--; // уменьшаем счётчик карт этого id ещё на 1, так как вставим его ещё раз
+        else
+            id = getFreeSingularId(id);
+
+        emplace_table(id, *next_ptr, positions);
+        not_end--;
+
+        next_rand(positions, next_ptr, true, not_end);
     }
 }
 
 wxPoint Controller::getRandLowest() {
-    int overall = gridSize.x * gridSize.y;
-    int x, y;
+    int overall = gridSize.x * gridSize.y; // вычисляем количество позиций в горизонтальном "срезе" массива
+    int x, y; // объявляем координаты для возвращаемой позиции
 
     do {
-        int pos = rand() % overall;
-        x = pos / gridSize.y;
-        y = pos % gridSize.y;
-    } while (table[0][x][y] != FREE);
+        int pos = rand() % overall; // получаем случайный номер позиции
+        x = pos / gridSize.y; // вычисляем x
+        y = pos % gridSize.y; // и y
+    } while (table[0][x][y] != FREE); // повторяем цикл, если эта позиция недоступна для вставки
 
-    return {x, y};
+    return wxPoint(x, y); // возвращаем wxPoint
 }
 
-#ifdef WXDEBUG
+void Controller::emplace_table(CardT id, const ThreePoint& pos, std::set<ThreePoint>& positions) {
+    table[pos.z][pos.x][pos.y] = id;
+
+    push_available(positions, pos); // записываем в сет новые позиции
+}
+
+#ifdef WXDEBUG // Если компилируем в режиме дебага
 
 #include <wx/file.h>
 
 void print_list(const std::set<ThreePoint>& positions) {
-    wxFile f("tmp.txt", wxFile::write_append);
+    wxFile f("tmp.txt", wxFile::write_append); // Открываем файл для записи
 
-    for (const auto& el : positions)
-        f.Write(itowxS(el.z) + " " + itowxS(el.x) + " " + itowxS(el.y) + "\n");
+    for (const auto& el : positions) // Итерируемся по всем позициям
+        f.Write(itowxS(el.z) + " " + itowxS(el.x) + " " + itowxS(el.y) + "\n"); // Выводим координаты в файл
 
-    f.Write("_ size: " + itowxS(positions.size()) + "\n");
+    f.Write("_ size: " + itowxS(positions.size()) + "\n"); // В конце выводим количество элементов 
 }
 
 #endif
 
-void Controller::emplace_rand(int id, std::set<ThreePoint>& positions,
-                              std::set<ThreePoint>::iterator& next_ptr,
-                              bool canBeUp) {
-#ifdef WXDEBUG
-    print_list(positions);
+void Controller::next_rand(std::set<ThreePoint>& positions,
+                              std::set<ThreePoint>::iterator& ptr,
+                              bool canOverlap, uint8_t& not_end) {
+#ifdef WXDEBUG // Если компилируем в режиме дебага
+    print_list(positions); // выводим список позиций
 #endif
 
-    table[next_ptr->z][next_ptr->x][next_ptr->y] = id;
+    ThreePoint prev = *ptr; // сохраняем предыдущее значение итератора
 
-    push_available(positions, *next_ptr);
+    positions.erase(ptr); // удаляем только что вставленный итератор
 
-    auto prev_ptr = next_ptr;
-    ThreePoint prev = *next_ptr;
+    if (not_end) {
+        if (positions.empty())
+            ptr = positions.insert(getRandLowest()).first;
+        else {
+            ptr = positions.begin();
 
-    cyclic_shift(next_ptr, positions);
+            int rand_d = rand() % positions.size();
 
-    positions.erase(prev_ptr);
+            for (int i = 0; i < rand_d; i++)
+                ptr++;
 
-    do
-        cyclic_shift(next_ptr, positions);
-    while (!canBeUp && !wouldBeUpFree(prev, *next_ptr));
+            auto rand_ptr = ptr;
+
+            while (!canOverlap && ptr != positions.end() && wouldOverlap(prev, *ptr)) // Пока не найдём тот, что не будет закрывать только что вставленную позицию, если не canBeUp
+                ptr++;
+            
+            if (ptr == positions.end())
+                ptr = positions.begin();
+
+            while (!canOverlap && ptr != rand_ptr && wouldOverlap(prev, *ptr))
+                ptr++;
+
+            if (ptr == rand_ptr && wouldOverlap(prev, *ptr)) {
+                auto _ = wouldOverlap(prev, *ptr);
+                if (not_end == positions.size())
+                    ptr = positions.begin();
+                else {
+                    auto res = positions.insert(getRandLowest());
+
+                    while (!res.second)
+                        res = positions.insert(getRandLowest());
+
+                    if (!res.second)
+                        throw std::runtime_error("Wrong map layout or internal error");
+
+                    ptr = res.first;
+                }
+            }
+        }
+    }
 }
 
-bool Controller::wouldBeUpFree(const ThreePoint& prev, const ThreePoint& next) {
-    table[next.z][next.x][next.y] = 1;
+bool Controller::wouldOverlap(const ThreePoint& prev, const ThreePoint& next) {
+    table[next.z][next.x][next.y] = 1; // вставляем в позицию next временный камень
 
-    bool res = upFree(prev);
+    bool res = !upFree(prev); // проверяем, будет ли свободен сверху камень в позиции prev
 
-    table[next.z][next.x][next.y] = FREE;
+    table[next.z][next.x][next.y] = FREE; // удаляем временный камень
 
-    return res;
+    return res; // возвращаем результат проверки
 }
 
+/**
+ * Checks if position `p`, shifted by `d`, is not out of bounds of array `table` with dimensions `gridSize`
+ */
+bool Controller::corrInd(const ThreePoint& p, const ThreePoint& d) {
+    auto& gS = gridSize; // более короткий алиса для переменной
+
+    return ((d.z == 0) || (d.z < 0 && p.z >= -d.z) || (d.z > 0 && p.z + d.z < gS.z)) &&
+           ((d.x == 0) || (d.x < 0 && p.x >= -d.x) || (d.x > 0 && p.x + d.x < gS.x)) &&
+           ((d.y == 0) || (d.y < 0 && p.y >= -d.y) || (d.y > 0 && p.y + d.y < gS.y));
+}
+
+/**
+ * Checks if position `p`, shifted by `d`, is not out of bounds and available for insert (FREE)
+ */
+bool Controller::Free(const ThreePoint& p, const ThreePoint& d) {
+    return corrInd(p, d) && (table[p.z + d.z][p.x + d.x][p.y + d.y] == FREE);
+}
+
+/**
+ * Checks if position `p`, shifted by `d`, is out of bounds or unavailable for insert (FREE)
+ */
+bool Controller::NFree(const ThreePoint& p, const ThreePoint& d) {
+    return !corrInd(p, d) || (table[p.z + d.z][p.x + d.x][p.y + d.y] != FREE);
+}
+
+/**
+ * Pushes all positions, that are close to `pos`, available for insert and don't overlap other available positions
+ */
 void Controller::push_available(std::set<ThreePoint>& positions,
-                                const ThreePoint& pos) {
+                                 const ThreePoint& pos) {
+    auto& p = pos;
+
     int z = pos.z, x = pos.x, y = pos.y;
 
-    // clang-format off
-    if (x >= 2 && table[z][x-2][y] == FREE) // left
+    if (NFree(p, {-1, -2, 0}) && NFree(p, {-1, -3, 0}) && NFree(p, {-1, -2, -1}) && NFree(p, {-1, -3, -1}) && NFree(p, {-1, -2, 1}) && NFree(p, {-1, -3, 1}) && Free(p, {0, -2, 0})) 
         positions.emplace(z, x-2, y);
-    if (x + 2 < gridSize.x && table[z][x+2][y] == FREE) // right
+    if (NFree(p, {-1, 2, 0}) && NFree(p, {-1, 3, 0}) && NFree(p, {-1, 2, -1}) && NFree(p, {-1, 3, -1}) && NFree(p, {-1, 2, 1}) && NFree(p, {-1, 3, 1}) && Free(p, {0, 2, 0})) // right
         positions.emplace(z, x+2, y);
 
-    if (y >= 1 && (y < 2 || table[z][x][y-2] != FREE)) { // half bottom
-        if (x >= 2 && table[z][x-2][y-1] == FREE) // left
+    if (NFree(p, {0, 0, -2})) { // half top
+        if (NFree(p, {-1, -2, -1}) && NFree(p, {-1, -3, -1}) && NFree(p, {-1, -2, 0}) && NFree(p, {-1, -3, 0}) && NFree(p, {-1, -2, -2}) && NFree(p, {-1, -3, -2}) && NFree(p, {-1, -1, -2}) && Free(p, {0, -2, -1})) // left
             positions.emplace(z, x-2, y-1);
-        if (x + 2 < gridSize.x && table[z][x+2][y-1] == FREE) // right
+        if (NFree(p, {-1, 2, -1}) && NFree(p, {-1, 3, -1}) && NFree(p, {-1, 2, 0}) && NFree(p, {-1, 3, 0}) && NFree(p, {-1, 2, -2}) && NFree(p, {-1, 3, -2}) && NFree(p, {-1, 1, -2}) && Free(p, {0, 2, -1})) // right 
             positions.emplace(z, x+2, y-1);
     }
 
-    if (y + 1 < gridSize.y && (y + 2 >= gridSize.y || table[z][x][y+2] != FREE)) { // half bottom
-        if (x >= 2 && table[z][x-2][y+1] == FREE) // left
+    if (NFree(p, {0, 0, 2})) { // half bottom 
+        if (NFree(p, {-1, -2, 1}) && NFree(p, {-1, -3, 1}) && NFree(p, {-1, -2, 0}) && NFree(p, {-1, -3, 0}) && NFree(p, {-1, -2, 2}) && NFree(p, {-1, -3, 2}) && NFree(p, {-1, -1, 2}) && Free(p, {0, -2, 1})) // left
             positions.emplace(z, x-2, y+1);
-        if (x + 2 < gridSize.x && table[z][x+2][y+1] == FREE) // right
+        if (NFree(p, {-1, 2, 1}) && NFree(p, {-1, 3, 1}) && NFree(p, {-1, 2, 0}) && NFree(p, {-1, 3, 0}) && NFree(p, {-1, 2, 2}) && NFree(p, {-1, 3, 2}) && NFree(p, {-1, 1, 2}) && Free(p, {0, 2, 1})) // right
             positions.emplace(z, x+2, y+1);
     }
 
-    if (y >= 2 && table[z][x][y-2] == FREE) // up
+    if (NFree(p, {-1, 0, -2}) && NFree(p, {-1, 0, -3}) && NFree(p, {-1, -1, -2}) && NFree(p, {-1, -1, -3}) && NFree(p, {-1, 1, -2}) && NFree(p, {-1, 1, -3}) && Free(p, {0, 0, -2})) // top 
         positions.emplace(z, x, y-2);
-    if (y + 2 < gridSize.y && table[z][x][y+2] == FREE) // bottom
+    if (NFree(p, {-1, 0, 2}) && NFree(p, {-1, 0, 3}) && NFree(p, {-1, -1, 2}) && NFree(p, {-1, -1, 3}) && NFree(p, {-1, 1, 2}) && NFree(p, {-1, 1, 3}) && Free(p, {0, 0, 2})) // bottom 
         positions.emplace(z, x, y+2);
 
-    if (z + 1 < gridSize.z) { // higher
-        if (table[z+1][x][y] == FREE) // straight
-            positions.emplace(z+1, x, y);
+    /* Higher */
 
-        if (y >= 1 && (y < 2 || table[z][x][y-2] != FREE) && table[z+1][x][y-1] == FREE) // half top
-            positions.emplace(z+1, x, y-1);
-        if (y + 1 < gridSize.y && (y + 2 >= gridSize.y || table[z][x][y+2] != FREE) && table[z+1][x][y+1] == FREE) // half bottom
-            positions.emplace(z+1, x, y+1);
+    if (Free(p, {1, 0, 0})) // straight 
+        positions.emplace(z+1, x, y);
 
-        if (x >= 1 && (x < 2 || table[z][x-2][y] != FREE)) {// half left
-            if (table[z+1][x-1][y] == FREE) // straight
-                positions.emplace(z+1, x-1, y);
-            
-            if (y >= 1 && (x < 2 || table[z][x-2][y-1] != FREE || (y < 2 || table[z][x-2][y-2] != FREE)) && (y < 2 || table[z][x][y-2] != FREE) && table[z+1][x-1][y-1] == FREE) // half top
-                positions.emplace(z+1, x-1, y-1);
+    if (NFree(p, {0, -1, -2}) && NFree(p, {0, 0, -2}) && NFree(p, {0, 1, -2}) && Free(p, {1, 0, -1})) // half top 
+        positions.emplace(z+1, x, y-1);
+    if (NFree(p, {0, -1, 2}) && NFree(p, {0, 0, 2}) && NFree(p, {0, 1, 2}) && Free(p, {1, 0, 1})) // half bottom
+        positions.emplace(z+1, x, y+1);
 
-            if (y + 1 < gridSize.y && (x < 2 || table[z][x-2][y+1] != FREE || (y + 2 < gridSize.y || table[z][x-2][y+2] != FREE)) && (y + 2 >= gridSize.y || table[z][x][y+2] != FREE) && table[z+1][x-1][y+1] == FREE) // half bottom
-                positions.emplace(z+1, x-1, y+1);
-        }
+    if (NFree(p, {0, -2, 0})) {// half left
+        if (NFree(p, {0, -2, -1}) && NFree(p, {0, -2, 1}) && Free(p, {1, -1, 0})) // straight
+            positions.emplace(z+1, x-1, y);
+        
+        if (NFree(p, {0, -2, -1}) && NFree(p, {0, -2, -2}) && NFree(p, {0, 0, -2}) && Free(p, {1, -1, -1})) // half top
+            positions.emplace(z+1, x-1, y-1);
 
-        if (x + 1 < gridSize.x && (x + 2 >= gridSize.x || table[z][x+2][y] != FREE)) { // half right
-            if (table[z+1][x+1][y] == FREE) // straight
-                positions.emplace(z+1, x+1, y);
-
-            if (y >= 1 && (x + 2 >= gridSize.x || table[z][x+2][y-1] != FREE || (y < 2 || table[z][x+2][y-2] != FREE)) && (y < 2 || table[z][x][y-2] != FREE) && table[z+1][x+1][y-1] == FREE) // half top
-                positions.emplace(z+1, x+1, y-1);
-
-            if (y + 1 < gridSize.y && (x + 2 >= gridSize.x || table[z][x+2][y+1] != FREE || (y + 2 < gridSize.y || table[z][x+2][y+2] != FREE)) && (y + 2 >= gridSize.y || table[z][x][y+2] != FREE) && table[z+1][x+1][y+1] == FREE) // half bottom
-                positions.emplace(z+1, x+1, y+1);
-        }
+        if (NFree(p, {0, -2, 1}) && NFree(p, {0, -2, 2}) && NFree(p, {0, 0, 2}) && Free(p, {1, -1, 1})) // half bottom
+            positions.emplace(z+1, x-1, y+1);
     }
-    // clang-format on
+
+    if (NFree(p, {0, 2, 0})) { // half right
+        if (NFree(p, {0, 2, -1}) && NFree(p, {0, 2, 1}) && Free(p, {1, 1, 0})) // straight
+            positions.emplace(z+1, x+1, y);
+
+        if (NFree(p, {0, 2, -1}) && NFree(p, {0, 2, -2}) && NFree(p, {0, 0, -2}) && Free(p, {1, 1, -1})) // half top
+            positions.emplace(z+1, x+1, y-1);
+
+        if (NFree(p, {0, 2, 1}) && NFree(p, {0, 2, 2}) && NFree(p, {0, 0, 2}) && Free(p, {1, 1, 1})) // half bottom
+            positions.emplace(z+1, x+1, y+1);
+    }
 }
 
+/**
+ * Removes all set stones and makes their positions free again
+ */
 void Controller::free_table() {
+    // Итерируемся по массиву table размерности gridSize
     for (int z = 0; z < gridSize.z; z++)
         for (int x = 0; x < gridSize.x; x++)
             for (int y = 0; y < gridSize.y; y++) {
-                CardT id = table[z][x][y];
+                CardT id = table[z][x][y]; // считываем id данной ячейки
 
-                if (id >= 0) {
-                    cardsCounter[id]++;
+                if (id >= 0) { // если это валидный id камня
+                    cardsCounter[id]++; // наращиваем счётчик камней
 
                     table[z][x][y] = FREE;
                 }
@@ -228,6 +299,17 @@ CardT Controller::genRandId() {
         id = rand() % TILE_IMAGES_N;
         w++;
     } while (cardsCounter[id] == 0);
+
+    cardsCounter[id]--;
+
+    return id;
+}
+
+CardT Controller::getFreeSingularId(CardT prev) {
+    CardT id = (prev < 38) ? 34 : 38;
+
+    while (id < TILE_IMAGES_N && cardsCounter[id] == 0) 
+        id++;
 
     cardsCounter[id]--;
 

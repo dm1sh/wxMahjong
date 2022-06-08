@@ -19,6 +19,9 @@ public:
 private:
     wxString path;
 
+    int lx;
+    int ly;
+
     wxXmlDocument layoutDoc;
 };
 

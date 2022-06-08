@@ -12,7 +12,7 @@
 
 class Controller {
 public:
-    Controller(Drawer& drawer);
+    Controller(Drawer& drawer) : drawer(drawer){};
 
     int stopwatch = -1;
 
@@ -43,14 +43,24 @@ private:
     CardT* selected = nullptr;
 
     void fillSolveableTable();
+
     wxPoint getRandLowest();
-    void emplace_rand(int id, std::set<ThreePoint>& positions,
-                      std::set<ThreePoint>::iterator& next_ptr, bool canBeUp);
-    bool wouldBeUpFree(const ThreePoint& prev, const ThreePoint& next);
+
+    void emplace_table(CardT id, const ThreePoint& pos, std::set<ThreePoint>& positions);
+    void next_rand(std::set<ThreePoint>& positions,
+                      std::set<ThreePoint>::iterator& ptr, bool canOverlap, uint8_t& not_end);
+
+    bool wouldOverlap(const ThreePoint& prev, const ThreePoint& next);
+
+    bool corrInd(const ThreePoint& p, const ThreePoint& d);
+    bool Free(const ThreePoint& p, const ThreePoint& d);
+    bool NFree(const ThreePoint& p, const ThreePoint& d);
+
     void push_available(std::set<ThreePoint>& positions, const ThreePoint& pos);
 
     void fillRandom();
 
+    CardT getFreeSingularId(CardT prev);
     CardT genRandId();
 
     CardT* getCardByPosition(ThreePoint& point);
