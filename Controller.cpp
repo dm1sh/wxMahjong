@@ -51,8 +51,8 @@ void Controller::fillSolveableTable() {
         int id = genRandId();
 
         if (id < 34) {
-            emplace_rand(id, positions, next_ptr, true);
             emplace_rand(id, positions, next_ptr, false);
+            emplace_rand(id, positions, next_ptr, true);
 
             cardsCounter[id]--;
             not_end -= 2;
@@ -69,7 +69,7 @@ wxPoint Controller::getRandLowest() {
 
     do {
         int pos = rand() % overall;
-        x = (pos / gridSize.y) % gridSize.x;
+        x = pos / gridSize.y;
         y = pos % gridSize.y;
     } while (table[0][x][y] != FREE);
 
@@ -103,16 +103,15 @@ void Controller::emplace_rand(int id, std::set<ThreePoint>& positions,
     push_available(positions, *next_ptr);
 
     auto prev_ptr = next_ptr;
-    auto prev = *next_ptr;
+    ThreePoint prev = *next_ptr;
 
-    do {
-        next_ptr++;
-
-        if (next_ptr == positions.end())
-            next_ptr = positions.begin();
-    } while (!canBeUp && !wouldBeUpFree(prev, *next_ptr));
+    cyclic_shift(next_ptr, positions);
 
     positions.erase(prev_ptr);
+
+    do
+        cyclic_shift(next_ptr, positions);
+    while (!canBeUp && !wouldBeUpFree(prev, *next_ptr));
 }
 
 bool Controller::wouldBeUpFree(const ThreePoint& prev, const ThreePoint& next) {
@@ -167,10 +166,10 @@ void Controller::push_available(std::set<ThreePoint>& positions,
             if (table[z+1][x-1][y] == FREE) // straight
                 positions.emplace(z+1, x-1, y);
             
-            if (y >= 1 && (x < 2 || table[z][x-2][y-1] != FREE) && table[z+1][x-1][y-1] == FREE) // half top
+            if (y >= 1 && (x < 2 || table[z][x-2][y-1] != FREE || (y < 2 || table[z][x-2][y-2] != FREE)) && (y < 2 || table[z][x][y-2] != FREE) && table[z+1][x-1][y-1] == FREE) // half top
                 positions.emplace(z+1, x-1, y-1);
 
-            if (y + 1 < gridSize.y && (x < 2 || table[z][x-2][y+1] != FREE) && table[z+1][x-1][y+1] == FREE) //half bottom
+            if (y + 1 < gridSize.y && (x < 2 || table[z][x-2][y+1] != FREE || (y + 2 < gridSize.y || table[z][x-2][y+2] != FREE)) && (y + 2 >= gridSize.y || table[z][x][y+2] != FREE) && table[z+1][x-1][y+1] == FREE) // half bottom
                 positions.emplace(z+1, x-1, y+1);
         }
 
@@ -178,10 +177,10 @@ void Controller::push_available(std::set<ThreePoint>& positions,
             if (table[z+1][x+1][y] == FREE) // straight
                 positions.emplace(z+1, x+1, y);
 
-            if (y >= 1 && (x + 2 >= gridSize.x || table[z][x+2][y-1] != FREE) && table[z+1][x+1][y-1] == FREE) // half top
+            if (y >= 1 && (x + 2 >= gridSize.x || table[z][x+2][y-1] != FREE || (y < 2 || table[z][x+2][y-2] != FREE)) && (y < 2 || table[z][x][y-2] != FREE) && table[z+1][x+1][y-1] == FREE) // half top
                 positions.emplace(z+1, x+1, y-1);
 
-            if (y + 1 < gridSize.y && (x + 2 >= gridSize.x || table[z][x+2][y+1] != FREE) && table[z+1][x+1][y+1] == FREE) //half bottom
+            if (y + 1 < gridSize.y && (x + 2 >= gridSize.x || table[z][x+2][y+1] != FREE || (y + 2 < gridSize.y || table[z][x+2][y+2] != FREE)) && (y + 2 >= gridSize.y || table[z][x][y+2] != FREE) && table[z+1][x+1][y+1] == FREE) // half bottom
                 positions.emplace(z+1, x+1, y+1);
         }
     }

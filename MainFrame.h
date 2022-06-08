@@ -21,6 +21,10 @@ private:
     GamePanel* panel;
 
     bool openLayout();
+    void startGame();
+
+    const std::function<void(const wxSize&)> setMinSize_fn =
+        [this](const wxSize& size) -> void { this->SetMinClientSize(size); };
 
     const wxString dataDirPath;
 

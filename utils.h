@@ -3,7 +3,9 @@
 
 #include "wxw.h"
 
+#include <set>
 #include <vector>
+#include <iterator>
 
 using std::vector;
 
@@ -54,5 +56,7 @@ using TLVec = vector<vector<vector<CardT>>>;
 enum Values { MATCHED = -3, EMPTY, FREE };
 
 bool isPositive(const wxSize& size);
+
+void cyclic_shift(std::set<ThreePoint>::iterator& it, const std::set<ThreePoint>& cont);
 
 #endif

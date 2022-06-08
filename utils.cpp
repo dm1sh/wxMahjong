@@ -20,3 +20,9 @@ wxString PRemaining(uint8_t remaining) {
 bool isPositive(const wxSize& size) {
     return size.x > 0 && size.y > 0;
 }
+
+void cyclic_shift(std::set<ThreePoint>::iterator& it, const std::set<ThreePoint>& cont) {
+    it++;
+    if (it == cont.end())
+        it = cont.begin();
+}

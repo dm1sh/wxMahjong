@@ -2,3 +2,4 @@ build/
 class_diagram/
 diagrams/
 .vscode/*.log
+report/.~lock*
