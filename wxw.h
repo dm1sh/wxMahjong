@@ -7,6 +7,7 @@
 #include <wx/wx.h>
 #endif
 
+// переопределяем макрос для преобразования C-строки в UTF-8 wxString
 #ifdef _
 #undef _
 #endif

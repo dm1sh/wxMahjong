@@ -2,11 +2,7 @@
 
 wxString LTimeToStr(int time) {
     return wxString::Format(_("%d:%02d:%02d"), time / 3600, (time / 60) % 60,
-                            time % 60);
-}
-
-int upDiv(int a, int b) {
-    return a / b + ((a % b) ? 1 : 0);
+                            time % 60); // переводим количество секунд с начала игры в читабельное время (ч:мм:сс) 
 }
 
 wxString itowxS(int a) {
@@ -14,15 +10,10 @@ wxString itowxS(int a) {
 }
 
 wxString PRemaining(uint8_t remaining) {
-    return wxString::Format("%i%%", remaining * 100 / 144);
+    return wxString::Format("%i%%", remaining * 100 / 144); // делим количество оставшихся камней на их количество и домножаем на 100, чтобы получить проценты
 }
 
 bool isPositive(const wxSize& size) {
     return size.x > 0 && size.y > 0;
 }
 
-void cyclic_shift(std::set<ThreePoint>::iterator& it, const std::set<ThreePoint>& cont) {
-    it++;
-    if (it == cont.end())
-        it = cont.begin();
-}
