@@ -1,5 +1,7 @@
 #include "TextDlg.h"
 
+#include <wx/settings.h>
+
 #include "utils.h"
 
 TextDlg::TextDlg(wxWindow* parent, wxWindowID id, const wxString& title, const wxString& content)
@@ -29,7 +31,7 @@ TextDlg::TextDlg(wxWindow* parent, wxWindowID id, const wxString& title, const w
     scrollableWnd->SetVirtualSize(textSize.x, textSize.y); // устанавливаем виртуальный размер окна прокрутки равным размерам статического текста
 
     SetClientSize( // размер видимого окна устанавливаем равным
-        textSize.x + 10, // по ширине: ширина текста
+        textSize.x + 10 + wxSystemSettings::GetMetric(wxSYS_HSCROLL_Y), // по ширине: ширина текста
         mmin(textSize.y, lineSize.y * 30) + 10); // по высоте: минимум из реальной высоты текста, или 30 строк
         // + отступы по 5 пикселей с обеих сторон
 }
