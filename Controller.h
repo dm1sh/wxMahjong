@@ -2,7 +2,6 @@
 #define CONTROLLER_H
 
 #include <array>
-#include <set>
 #include <stack>
 
 #include "wxw.h"
@@ -44,19 +43,19 @@ private:
 
     void fillSolveableTable();
 
-    wxPoint getRandLowest();
+    wxPoint getRandLowest() const;
 
-    void emplace_table(CardT id, const ThreePoint& pos, std::set<ThreePoint>& positions);
-    void next_rand(std::set<ThreePoint>& positions,
-                      std::set<ThreePoint>::iterator& ptr, bool canOverlap, uint8_t& not_end);
+    void emplace_table(CardT id, const ThreePoint& pos, PosSet& positions);
+    void next_rand(PosSet& positions,
+                      PosSet::iterator& ptr, bool canOverlap, uint8_t& not_end);
 
     bool wouldOverlap(const ThreePoint& prev, const ThreePoint& next);
 
-    bool corrInd(const ThreePoint& p, const ThreePoint& d);
-    bool Free(const ThreePoint& p, const ThreePoint& d);
-    bool NFree(const ThreePoint& p, const ThreePoint& d);
+    bool corrInd(const ThreePoint& p, const ThreePoint& d) const;
+    bool Free(const ThreePoint& p, const ThreePoint& d) const;
+    bool NFree(const ThreePoint& p, const ThreePoint& d) const;
 
-    void push_available(std::set<ThreePoint>& positions, const ThreePoint& pos);
+    void push_available(PosSet& positions, const ThreePoint& pos) const;
 
     void fillRandom();
 

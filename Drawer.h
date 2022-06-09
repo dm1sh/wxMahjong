@@ -16,25 +16,25 @@ class Drawer {
 public:
     Drawer();
 
-    void drawTable(wxDC& dc);
+    void drawTable(wxDC& dc) const;
 
     void composeBG();
-    void composeBoard(const TLVec& layout, const Dimensions& gridSize);
+    void composeBoard(const TLVec& table, const Dimensions& gridSize);
 
     void resizeBg(const wxSize& tableSize);
-    bool resizeBoard(const TLVec& layout, const Dimensions& gridSize, bool force);
+    bool resizeBoard(const TLVec& table, const Dimensions& gridSize, bool force);
 
-    wxPoint toGrid(wxPoint point) const;
+    wxPoint toGrid(const wxPoint& point) const;
     wxPoint fromGrid(int x, int y) const;
     wxPoint fromGrid(const wxPoint& point) const;
 
-    wxSize composeMinSize(const Dimensions& gridSize);
+    wxSize composeMinSize(const Dimensions& gridSize) const;
 
     wxSize tableSize;
 
     wxSize tilePixelSize; // кратно 3x4, по умолчанию 600x800
     wxSize resolution;
-    wxRect tablePixelRect;
+    wxRect boardPixelRect;
 
     ThreePoint marked;
 
