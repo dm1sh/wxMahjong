@@ -1,17 +1,24 @@
 #include "MainFrame.h"
 
-#include "AboutDlg.h"
-#include "HelpDlg.h"
-#include "RulesDlg.h"
+#include "TextDlg.h"
+#include "TXTContents.h"
+
+#include <wx/filename.h>
+#include <wx/stdpaths.h>
 
 #include "events.h"
 
 #include "resources/icon.xpm"
 
 MainFrame::MainFrame()
-    : wxFrame(nullptr, wxID_ANY, _("Маджонг (пасьянс)"), wxDefaultPosition,
-              wxSize(800, 600)),
-      dataDirPath(wxStandardPaths::Get().GetUserDataDir()) {
+    : wxFrame(nullptr, wxID_ANY, _("Маджонг (пасьянс)"), wxDefaultPosition, // указываем то, что у этого окна нет родителя, оно может иметь любой id, так же устанавливаем заголовок и позицию на усмотрение оконного менеджера
+              wxSize(800, 600)), // устанавливаем стандартный размер окна
+      dataDirPath(wxStandardPaths::Get().GetUserDataDir()), // сохраняем стандартный путь до ресурсов программы
+      setMinSize_fn{[this](const wxSize& size) -> void { // создаём лямбду с замыканием внутри неё методов для установки минимального размера окна и передачи её как аргумент в метод другого класса
+          this->SetMinClientSize(size); // устанавливаем минимальный размер окна для оконного менеджера
+          const auto& curr = this->GetClientSize(); // считываем нынешний размер окна 
+          this->SetClientSize({mmax(size.x, curr.x), mmax(size.y, curr.y)}); // если нынешний размер окна меньше, чем требует карта, увеличиваем ту сторону окна до минимальной необходимой
+      }} {
     SetIcon(logo_icon);
 
     initMenu(); // Создание пунктов меню
@@ -67,43 +74,43 @@ void MainFrame::bindMenu() {
     Bind( // Вешаем обработчик для открытия схемы и запуска соответствующей игры
         wxEVT_MENU,
         [this](wxCommandEvent& _) -> void {
-            if (openLayout())
-                startGame();
+            if (openLayout()) // запрашиваем в диалоге путь до файла карты и если получаем,
+                startGame(); // запускаем игру
         },
         IDM_Open);
 
     Bind( // Вешаем обработчик для открытия диалога с "помощью"
         wxEVT_MENU,
         [this](wxCommandEvent& _) -> void {
-            (new HelpDlg(this, wxID_ANY))->Show();
+            (new TextDlg(this, wxID_ANY, _("Помощь"), TXTContents::help))->Show();
         },
         IDM_Help);
-
-    Bind( // Вешаем обработчик для открытия диалога "о программе"
-        wxEVT_MENU,
-        [this](wxCommandEvent& _) -> void {
-            (new AboutDlg(this, wxID_ANY))->Show();
-        },
-        IDM_About);
 
     Bind( // Вешаем обработчик для открытия диалога с "правилами"
         wxEVT_MENU,
         [this](wxCommandEvent& _) -> void {
-            (new RulesDlg(this, wxID_ANY))->Show();
+            (new TextDlg(this, wxID_ANY, _("Правила игры"), TXTContents::rules))->Show();
         },
         IDM_Rules);
+
+    Bind( // Вешаем обработчик для открытия диалога "о программе"
+        wxEVT_MENU,
+        [this](wxCommandEvent& _) -> void {
+            (new TextDlg(this, wxID_ANY, _("О программе"), TXTContents::about))->Show();
+        },
+        IDM_About);
 
     Bind( // Вешаем обработчик для запуска новой игры
         wxEVT_MENU,
         [this](wxCommandEvent& _) -> void {
-            if (!layoutPath.IsEmpty() || openLayout())
-                startGame();
+            if (!layoutPath.IsEmpty() || openLayout()) // если ещё не выбран файл с картой, открываем диалог для его выбора
+                startGame(); // если путь был, или открыт в диалоге, начинаем игру
         },
         IDM_New_Game);
 
     Bind( // Вешаем обработчик для установки режима генерации поля
         wxEVT_MENU,
-        [this](wxCommandEvent& evt) -> void { solveable = evt.IsChecked(); },
+        [this](wxCommandEvent& evt) -> void { solveable = evt.IsChecked(); }, // устанавливаем флаг способа генерации поля согласно значению чекбокса в меню
         IDM_Solveable);
 
     Bind( // Вешаем обработчик для отмены хода
@@ -128,10 +135,10 @@ bool MainFrame::openLayout() {
         _("Turtle.smlf"), _("Файлы Mahjong карт (*.smlf)|*.smlf"), // Стандартный файл и поддерживаемые форматы файлов
         wxFD_OPEN | wxFD_FILE_MUST_EXIST);
 
-    if (openFileDlg.ShowModal() == wxID_CANCEL)
-        return false;
+    if (openFileDlg.ShowModal() == wxID_CANCEL) // если пользователь не выбрал файл
+        return false; // возвращаем false, т.к. открытие карты не успешно
 
-    layoutPath = openFileDlg.GetPath();
+    layoutPath = openFileDlg.GetPath(); // сохраняем путь до файла 
     return true;
 }
 

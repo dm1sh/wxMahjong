@@ -5,9 +5,6 @@
 
 #include "GamePanel.h"
 
-#include <wx/filename.h>
-#include <wx/stdpaths.h>
-
 class MainFrame : public wxFrame {
 public:
     MainFrame();
@@ -23,8 +20,7 @@ private:
     bool openLayout();
     void startGame();
 
-    const std::function<void(const wxSize&)> setMinSize_fn =
-        [this](const wxSize& size) -> void { this->SetMinClientSize(size); };
+    const std::function<void(const wxSize&)> setMinSize_fn;
 
     const wxString dataDirPath;
 
