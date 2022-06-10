@@ -1,4 +1,3 @@
-# CXX = $(shell wx-config --cxx)
 CXX = clang++
  
 PROGRAM = wxMahjong
@@ -19,3 +18,8 @@ $(BDIR):
 
 clean:
 	rm -f $(BDIR)/*.o $(PROGRAM)
+
+install:
+	mkdir -p ~/.wxMahjong/
+	cp resources/* -r ~/.wxMahjong/
+	cp build/wxMahjong /usr/local/bin/
