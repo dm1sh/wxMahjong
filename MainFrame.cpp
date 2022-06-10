@@ -47,13 +47,13 @@ MainFrame::MainFrame()
 void MainFrame::initMenu() {
     wxMenu* menuGame = new wxMenu; // Создаём подменю
     menuGame->Append(IDM_New_Game, _("Начать сначала\tCTRL+N")); // Создаем пункт меню с id обработчика IDM_New_Game, далее аналогично
-    menuGame->Append(IDM_Open, _("Открыть карту"));
+    menuGame->Append(IDM_Open, _("Открыть карту\tCTRL+O"));
     menuGame->AppendCheckItem(IDM_Solveable, _("Генерировать решаемую карту"));
     menuGame->AppendSeparator(); // Добавляем горизонтальный разделитель в меню
     menuGame->Append(IDM_Undo, _("Отменить ход"));
     menuGame->Append(IDM_Reshuffle, _("Перемешать поле"));
     menuGame->AppendSeparator();
-    menuGame->Append(IDM_Exit, _("Выход"));
+    menuGame->Append(IDM_Exit, _("Выход\tCTRL+Q"));
 
     wxMenu* menuHelp = new wxMenu;
     menuHelp->Append(IDM_Help, _("Инструкция"));

@@ -16,7 +16,7 @@ bool XmlLayout::openFile(const wxString& openPath) {
 }
 
 Dimensions XmlLayout::getDimensions() {
-    auto root = layoutDoc.GetRoot(); // сохраняем в ссылке указатель на корневой элемент XML-документа
+    auto root = layoutDoc.GetRoot(); // сохраняем указатель на корневой элемент XML-документа
 
     lx = wxAtoi(root->GetAttribute("lx")); // считываем минимальный x
     ly = wxAtoi(root->GetAttribute("ly")); // считываем минимальный y

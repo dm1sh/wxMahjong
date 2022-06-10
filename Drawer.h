@@ -30,8 +30,6 @@ public:
 
     wxSize composeMinSize(const Dimensions& gridSize) const;
 
-    wxSize tableSize;
-
     wxSize tilePixelSize; // кратно 3x4, по умолчанию 600x800
     wxSize resolution;
     wxRect boardPixelRect;

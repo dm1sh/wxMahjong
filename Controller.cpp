@@ -2,7 +2,7 @@
 
 #include <exception>
 
-static const std::array<uint8_t, 42> defaultCardsCounter{
+const std::array<uint8_t, 42> defaultCardsCounter{
     4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
     4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 1, 1, 1, 1, 1, 1, 1, 1};
 
@@ -48,7 +48,7 @@ void Controller::fillSolveableTable() {
     auto next_ptr = positions.begin(); // инициализируем указатель на позицию, куда будет вставляться следующий камень
 
     while (!positions.empty()) {
-        int id = genRandId();
+        auto id = genRandId();
 
         emplace_table(id, *next_ptr, positions); // вставляем id в next_ptr
         not_end--; // уменьшаем счётчик оставшихся для вставки камней
@@ -60,10 +60,10 @@ void Controller::fillSolveableTable() {
         else
             id = getFreeSingularId(id);
 
-        emplace_table(id, *next_ptr, positions);
-        not_end--;
+        emplace_table(id, *next_ptr, positions); // вставляем id в next_ptr
+        not_end--; // уменьшаем счётчик оставшихся для вставки камней
 
-        next_rand(positions, next_ptr, true, not_end);
+        next_rand(positions, next_ptr, true, not_end); // Находим случайную новую позицию
     }
 }
 
@@ -124,26 +124,28 @@ void Controller::next_rand(PosSet& positions,
 
             const auto rand_ptr = ptr; // сохраняем предыдущее положение итератора
 
-            while (!canOverlap && ptr != positions.end() && wouldOverlap(prev, *ptr)) // Пока не найдём тот, что не будет закрывать только что вставленную позицию, если не canBeUp или дошли до конца набора
-                ptr++; // наращиваем итератор
-
-            if (ptr == positions.end()) { // если ни одна из позиций начиная с rand_ptr не подошла (нельзя выбирать накрывающую предыдущий камень и все позиции накрывают) 
-                ptr = positions.begin(); // начинаем с начала
-
-                while (!canOverlap && ptr != rand_ptr && wouldOverlap(prev, *ptr)) // Пока не найдём тот, что не будет закрывать только что вставленную позицию, если не canBeUp и не дошли до rand_ptr
+            if (!canOverlap) {
+                while (ptr != positions.end() && wouldOverlap(prev, *ptr)) // Пока не найдём тот, что не будет закрывать только что вставленную позицию, если не canBeUp или дошли до конца набора
                     ptr++; // наращиваем итератор
-            }
 
-            if (ptr == rand_ptr && !canOverlap && wouldOverlap(prev, *ptr)) { // если итератор совпадает с rand_ptr и при этом ptr перекрывает prev,
-                if (not_end == positions.size()) // если уже все позиции добавлены в набор
-                    ptr = positions.begin(); // просто выбираем первую из них
-                else { // иначе
-                    auto res = positions.insert(getRandLowest()); // пытаемся вставить вставляем случайную позицию в нижней плоскости 
+                if (ptr == positions.end()) { // если ни одна из позиций начиная с rand_ptr не подошла (нельзя выбирать накрывающую предыдущий камень и все позиции накрывают) 
+                    ptr = positions.begin(); // начинаем с начала
 
-                    while (!res.second) // пока не произошла вставка позиции в набор
-                        res = positions.insert(getRandLowest()); // пытаемся вставить случайную позицию в нижней плоскости
+                    while (ptr != rand_ptr && wouldOverlap(prev, *ptr)) // Пока не найдём тот, что не будет закрывать только что вставленную позицию, если не canBeUp и не дошли до rand_ptr
+                        ptr++; // наращиваем итератор
+                }
 
-                    ptr = res.first; // получаем итератор на только что вставленную позицию
+                if (ptr == rand_ptr && wouldOverlap(prev, *ptr)) { // если итератор совпадает с rand_ptr и при этом ptr перекрывает prev,
+                    if (not_end == positions.size()) // если уже все позиции добавлены в набор
+                        ptr = positions.begin(); // просто выбираем первую из них
+                    else { // иначе
+                        auto res = positions.insert(getRandLowest()); // пытаемся вставить вставляем случайную позицию в нижней плоскости 
+
+                        while (!res.second) // пока не произошла вставка позиции в набор
+                            res = positions.insert(getRandLowest()); // пытаемся вставить случайную позицию в нижней плоскости
+
+                        ptr = res.first; // получаем итератор на только что вставленную позицию
+                    }
                 }
             }
         }
@@ -318,7 +320,7 @@ CardT Controller::getFreeSingularId(CardT prev) {
  * It also changes point to top right coordinate of card
  */
 CardT* Controller::getCardByPosition(ThreePoint& point) {
-    int8_t topIndex = -1; // начинаем с -1, чтобы если не нашёлся ни один камень, получить невалидную позицию
+    int topIndex = -1; // начинаем с -1, чтобы если не нашёлся ни один камень, получить невалидную позицию
     CardT* res = nullptr; // указатель на элемент массива
 
     ThreePoint realPos(point); // сохраняем копию позиции, чтобы при смещении не ломать позицию, для которой ищем

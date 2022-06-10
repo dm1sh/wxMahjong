@@ -20,13 +20,13 @@ TextDlg::TextDlg(wxWindow* parent, wxWindowID id, const wxString& title, const w
                          wxDefaultSize, wxSP_WRAP);
 
     const wxClientDC dc(text); // создаём dc, используя для него настройки статического текста
-    const wxSize lineSize = dc.GetTextExtent(wxString('W', 40U)); // получаем из dc размеры строчки из 40 символов 'W' (так как текст удобнее всего читать, если в нём около 40-60 символов в строке)
+    const wxSize& lineSize = dc.GetTextExtent(wxString('W', 40U)); // получаем из dc размеры строчки из 40 символов 'W' (так как текст удобнее всего читать, если в нём около 40-60 символов в строке)
 
     scrollableWnd->SetScrollbars(lineSize.x, lineSize.y, 0, 0); // устанавливаем скорость скролла (количество пикселей, прокручиваемых при одинарном прокручивании колеса мыши, или нажатие кнопки)
 
     text->Wrap(lineSize.x); // Делаем перенос строк для того, чтобы вместить текст в ширину строки
 
-    auto textSize = text->GetClientSize(); // получаем размер статического текста
+    const wxSize& textSize = text->GetClientSize(); // получаем размер статического текста
 
     scrollableWnd->SetVirtualSize(textSize.x, textSize.y); // устанавливаем виртуальный размер окна прокрутки равным размерам статического текста
 

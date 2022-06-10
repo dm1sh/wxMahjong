@@ -3,7 +3,7 @@
 #include <wx/filename.h>
 #include <wx/stdpaths.h>
 
-static const char* tileImageNames[TILE_IMAGES_N] = {
+const char* tileImageNames[TILE_IMAGES_N] = {
     // clang-format off
     "Pin1",    "Pin2",    "Pin3",    "Pin4",    "Pin5",    "Pin6",   "Pin7",    "Pin8",    "Pin9",
     "Sou1",    "Sou2",    "Sou3",    "Sou4",    "Sou5",    "Sou6",   "Sou7",    "Sou8",    "Sou9",
@@ -37,8 +37,8 @@ void Drawer::drawTable(wxDC& dc) const {
     }
 }
 
-static const wxColor lGreen{0x07, 0x55, 0x2b};
-static const wxColor dGreen{0x01, 0x2d, 0x16};
+const wxColor lGreen{0x07, 0x55, 0x2b};
+const wxColor dGreen{0x01, 0x2d, 0x16};
 
 void Drawer::composeBG() {
     bgBitmap = wxBitmap(resolution); // создаём битмап размером со всю панейль

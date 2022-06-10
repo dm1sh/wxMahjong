@@ -16,7 +16,7 @@ wxString PRemaining(uint8_t remaining);
 #define mmin(a, b) (a + b - abs(a - b)) / 2 // среднее арифметическое минус половина разницы
 #define mmax(a, b) (a + b + abs(a - b)) / 2 // среднее арифметическое плюс половина разницы
 
-using CardT = int16_t;
+using CardT = int8_t;
 
 struct Dimensions : wxSize { // используется там, где необходимо задать размеры в трёх координатах
     Dimensions(int _z, int _x, int _y) : z(_z), wxSize(_x, _y){};
